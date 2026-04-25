@@ -267,6 +267,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;ba
       <div class="tb"><strong>Prilagodi raspored</strong> — promijeni koji trening je koji dan. Raspored se cuva automatski.</div>
       <div id="scheduleEditor"></div>
       <button class="reset-btn" onclick="resetSchedule()">Reset to Default</button>
+      <div class="sl" style="margin-top:24px">Data Export</div>
+      <div class="tb"><strong>Export za analizu</strong> — kopiraj podatke i paste-aj u Claude chat za detaljnu analizu treninga, progresije i preporuke.</div>
+      <button class="reset-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);margin-top:0" onclick="exportData()">Copy All Data to Clipboard</button>
+      <div id="exportStatus" style="font-size:11px;color:var(--green);text-align:center;margin-top:6px;display:none">Copied! Paste in Claude chat.</div>
       <div class="sl" style="margin-top:24px">App Info</div>
       <div class="card" style="padding:12px"><div style="font-size:12px;color:var(--text2);line-height:1.6">
         <strong style="color:var(--text)">FitPlan v3</strong><br>
@@ -574,6 +578,16 @@ function setSched(dayIdx,progIdx){
 }
 function resetSchedule(){
   S.schedule=[...DEFAULT_SCHED];saveS();renderWk();renderDay();renderSettings();
+}
+function exportData(){
+  const exp={exported:new Date().toISOString(),log:S.log||{},watch:S.watch||{},checkins:S.checkins||{},skipped:S.skipped||{},schedule:S.schedule};
+  const txt='FITPLAN EXPORT '+new Date().toLocaleDateString()+'\n```json\n'+JSON.stringify(exp)+'\n```';
+  navigator.clipboard.writeText(txt).then(()=>{
+    const el=document.getElementById('exportStatus');el.style.display='block';setTimeout(()=>el.style.display='none',3000);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    const el=document.getElementById('exportStatus');el.style.display='block';setTimeout(()=>el.style.display='none',3000);
+  });
 }
 
 // NUTRITION
