@@ -16,12 +16,12 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 .app{max-width:430px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
-.hdr{padding:calc(var(--safe-t)+8px) 20px 12px;background:var(--bg);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
+.hdr{padding:70px 20px 12px;background:var(--bg);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
 .hdr-top{display:flex;justify-content:space-between;align-items:center}
 .hdr h1{font-size:22px;font-weight:800;letter-spacing:-.5px}.hdr h1 span{color:var(--accent)}
 .hdr-date{font-size:12px;color:var(--text2);margin-top:1px}
 .wa-badge{background:linear-gradient(135deg,var(--accent),#e04500);color:#fff;font-size:11px;font-weight:800;padding:5px 10px;border-radius:20px;display:flex;align-items:center;gap:4px;cursor:pointer}
-.cnt{flex:1;padding:14px 14px calc(76px + var(--safe-b));overflow-y:auto;-webkit-overflow-scrolling:touch}
+.cnt{flex:1;padding:14px 14px 110px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .page{display:none;animation:fi .2s ease}.page.active{display:block}
 @keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .card{background:var(--card);border-radius:var(--r);padding:14px;margin-bottom:10px;border:1px solid var(--border)}
@@ -95,7 +95,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;ba
 .gi-i{font-size:22px}.gi-info{flex:1}.gi-t{font-size:13px;font-weight:600}
 .gi-bar{height:5px;background:var(--bg3);border-radius:3px;margin-top:5px;overflow:hidden}
 .gi-fill{height:100%;border-radius:3px;transition:width .5s}.gi-tgt{font-size:11px;color:var(--text3);margin-top:3px}
-.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(17,17,24,.92);border-top:1px solid var(--border);display:flex;justify-content:center;padding:6px 0 calc(6px + var(--safe-b));z-index:100;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(17,17,24,.92);border-top:1px solid var(--border);display:flex;justify-content:center;padding:6px 0 40px;z-index:100;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 .bnav-in{display:flex;max-width:430px;width:100%;justify-content:space-around}
 .ni{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 6px;cursor:pointer;border-radius:8px}
 .ni.act svg{color:var(--accent)}.ni.act .nl{color:var(--accent)}
@@ -130,10 +130,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;ba
 /* History */
 .hist-modal{display:none;position:fixed;inset:0;background:var(--bg);z-index:150;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .hist-modal.vis{display:block}
-.hist-hdr{display:flex;align-items:center;justify-content:space-between;padding:calc(var(--safe-t)+10px) 16px 12px;position:sticky;top:0;background:var(--bg);z-index:10;border-bottom:1px solid var(--border)}
+.hist-hdr{display:flex;align-items:center;justify-content:space-between;padding:72px 16px 12px;position:sticky;top:0;background:var(--bg);z-index:10;border-bottom:1px solid var(--border)}
 .hist-back{background:none;border:none;color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
 .hist-title{font-size:16px;font-weight:800}
-.hist-cnt{padding:14px 14px calc(20px + var(--safe-b))}
+.hist-cnt{padding:14px 14px 54px}
 .hist-sel{width:100%;padding:10px 12px;border-radius:var(--rs);background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;font-family:inherit;margin-bottom:14px;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238e8ea8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
 .chart-wrap{background:var(--card);border-radius:var(--r);padding:14px;margin-bottom:14px;border:1px solid var(--border)}
 .chart-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
@@ -147,7 +147,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;ba
 /* Month Calendar */
 .cal-modal{display:none;position:fixed;inset:0;background:var(--bg);z-index:140;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .cal-modal.vis{display:block}
-.cal-hdr{display:flex;align-items:center;justify-content:space-between;padding:calc(var(--safe-t)+10px) 16px 12px;position:sticky;top:0;background:var(--bg);z-index:10;border-bottom:1px solid var(--border)}
+.cal-hdr{display:flex;align-items:center;justify-content:space-between;padding:72px 16px 12px;position:sticky;top:0;background:var(--bg);z-index:10;border-bottom:1px solid var(--border)}
 .cal-nav{background:none;border:none;color:var(--accent);font-size:20px;font-weight:700;cursor:pointer;padding:8px 12px;font-family:inherit}
 .cal-month{font-size:16px;font-weight:800}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:8px 12px}

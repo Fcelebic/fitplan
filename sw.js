@@ -1,4 +1,4 @@
-const CACHE='fitplan-v6';
+const CACHE='fitplan-v7';
 
 self.addEventListener('install',e=>{
   e.waitUntil(self.skipWaiting());
