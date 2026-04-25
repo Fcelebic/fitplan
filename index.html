@@ -179,6 +179,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;ba
 .ex-yt{width:26px;height:26px;border-radius:6px;background:var(--red2);border:none;color:var(--red);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;margin-top:1px}
 .ex-yt:active{transform:scale(.9)}
 .ex-yt svg{width:14px;height:14px}
+/* Post-workout log */
+.pw-card{background:var(--card);border-radius:var(--r);padding:16px;margin-top:16px;border:1px solid var(--border)}
+.pw-title{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.pw-title span{font-size:18px}
+.pw-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pw-field{display:flex;flex-direction:column;gap:3px}
+.pw-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.pw-input{padding:8px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:15px;font-weight:700;font-family:inherit;outline:none;width:100%;transition:.2s}
+.pw-input:focus{border-color:var(--accent)}
+.pw-input::placeholder{color:var(--text3);font-weight:400}
+.pw-saved{font-size:11px;color:var(--green);font-weight:600;margin-top:8px;text-align:center;display:none}
+.pw-saved.vis{display:block}
+/* Weekly check-in */
+.checkin-card{background:var(--card);border-radius:var(--r);padding:16px;margin-bottom:12px;border:1px solid var(--border)}
+.checkin-row{display:flex;gap:8px;margin-bottom:8px}
+.checkin-field{flex:1}
+/* Analytics */
+.an-card{background:var(--card);border-radius:var(--r);padding:14px;margin-bottom:10px;border:1px solid var(--border)}
+.an-title{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.an-val{font-size:28px;font-weight:800;line-height:1}
+.an-sub{font-size:11px;color:var(--text2);margin-top:4px}
+.an-row{display:flex;gap:8px;margin-bottom:8px}
+.an-mini{flex:1;background:var(--bg3);border-radius:var(--rs);padding:10px;text-align:center}
+.an-mini-v{font-size:18px;font-weight:800}.an-mini-l{font-size:9px;color:var(--text3);margin-top:2px;text-transform:uppercase;font-weight:600}
 </style>
 </head>
 <body>
@@ -205,6 +229,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;ba
     </div>
     <div class="page" id="p-stats">
       <div style="text-align:center;margin-bottom:14px"><button onclick="openHist()" style="background:var(--accent);color:#fff;border:none;border-radius:24px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">Training History &amp; Progress</button></div>
+      <!-- Weekly Check-in -->
+      <div class="sl">Weekly Check-in</div>
+      <div class="checkin-card">
+        <div class="checkin-row">
+          <div class="checkin-field"><div class="pw-label">Weight (kg)</div><input class="pw-input" type="number" inputmode="decimal" placeholder="102.9" id="ciWeight" onchange="saveCheckin()"></div>
+          <div class="checkin-field"><div class="pw-label">VO2 Max (Watch)</div><input class="pw-input" type="number" inputmode="decimal" placeholder="29.2" id="ciVo2" onchange="saveCheckin()"></div>
+        </div>
+        <div class="checkin-row">
+          <div class="checkin-field"><div class="pw-label">Waist (cm)</div><input class="pw-input" type="number" inputmode="decimal" placeholder="optional" id="ciWaist" onchange="saveCheckin()"></div>
+          <div class="checkin-field"><div class="pw-label">Notes</div><input class="pw-input" type="text" placeholder="Kako se osjecas?" id="ciNotes" onchange="saveCheckin()"></div>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:6px">Unesi jednom sedmicno (idealno ponedjeljak ujutro, nataste)</div>
+      </div>
+      <!-- Analytics -->
+      <div class="sl">Analytics (Apple Watch)</div>
+      <div id="analyticsSection"></div>
       <div class="card" style="text-align:center;padding:18px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:700">Wellness Age</div><div style="font-size:52px;font-weight:800;color:var(--green);line-height:1">32</div><div style="font-size:12px;color:var(--text2);margin-top:3px">Chronological: 34 &middot; 2 god mladji</div></div>
       <div class="sg"><div class="sc"><div class="sc-v" style="color:var(--purple)">97</div><div class="sc-m">/100</div><div class="sc-l">Mind</div></div><div class="sc"><div class="sc-v" style="color:var(--green)">90</div><div class="sc-m">/100</div><div class="sc-l">Balance</div></div><div class="sc"><div class="sc-v" style="color:var(--blue)">73</div><div class="sc-m">/100</div><div class="sc-l">Mobility</div></div><div class="sc"><div class="sc-v" style="color:var(--blue)">71</div><div class="sc-m">/100</div><div class="sc-l">Strength</div></div><div class="sc"><div class="sc-v" style="color:var(--yellow)">63</div><div class="sc-m">/100</div><div class="sc-l">Body</div></div><div class="sc"><div class="sc-v" style="color:var(--red)">27</div><div class="sc-m">/100</div><div class="sc-l">Cardio</div></div></div>
       <div class="sl">Body Composition</div>
@@ -369,6 +409,7 @@ function nav(p){
   if(p==='nutrition')renderNut();
   if(p==='mobility')renderMob();
   if(p==='settings')renderSettings();
+  if(p==='stats'){loadCheckin();renderAnalytics()}
 }
 
 // SCHEDULE
@@ -451,8 +492,33 @@ function renderDay(){
     });
   });
   if(d.type==='gym'||d.type==='cardio')h+=`<div style="text-align:center;margin:18px 0 6px"><button onclick="openTm()" style="background:var(--accent);color:#fff;border:none;border-radius:24px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">&#9201; Rest Timer</button></div>`;
+  // Post-workout Apple Watch data
+  if(d.type!=='rest'){
+    if(!S.watch)S.watch={};
+    const wk=today+'_watch';
+    const wd=S.watch[wk]||{};
+    h+=`<div class="pw-card">
+      <div class="pw-title"><span>&#9201;</span> Post-Workout Log (Apple Watch)</div>
+      <div class="pw-grid">
+        <div class="pw-field"><div class="pw-label">Avg HR (bpm)</div><input class="pw-input" type="number" inputmode="numeric" placeholder="142" value="${wd.hrAvg||''}" onchange="saveWatch('${wk}','hrAvg',this.value)"></div>
+        <div class="pw-field"><div class="pw-label">Max HR (bpm)</div><input class="pw-input" type="number" inputmode="numeric" placeholder="178" value="${wd.hrMax||''}" onchange="saveWatch('${wk}','hrMax',this.value)"></div>
+        <div class="pw-field"><div class="pw-label">Calories (kcal)</div><input class="pw-input" type="number" inputmode="numeric" placeholder="520" value="${wd.cals||''}" onchange="saveWatch('${wk}','cals',this.value)"></div>
+        <div class="pw-field"><div class="pw-label">Duration (min)</div><input class="pw-input" type="number" inputmode="numeric" placeholder="65" value="${wd.dur||''}" onchange="saveWatch('${wk}','dur',this.value)"></div>
+      </div>
+      <div class="pw-saved ${Object.keys(wd).length>0?'vis':''}" id="pwSaved">&#10003; Saved</div>
+    </div>`;
+  }
   c.innerHTML=h;
 }
+function saveWatch(key,field,val){
+  if(!S.watch)S.watch={};
+  if(!S.watch[key])S.watch[key]={};
+  S.watch[key][field]=parseFloat(val)||'';
+  if(!val)delete S.watch[key][field];
+  saveS();
+  const el=document.getElementById('pwSaved');if(el){el.classList.add('vis');setTimeout(()=>el.classList.remove('vis'),2000)}
+}
+
 function toggleSkip(di){
   if(!S.skipped)S.skipped={};
   const key=dk()+'_'+di;
@@ -657,6 +723,100 @@ function goToDay(dtStr,weekIdx){
   const diff=Math.round((target.getTime()-thisMon.getTime())/(7*86400000));
   weekOff=diff;
   S.sel=weekIdx;saveS();nav('schedule');renderWk();renderDay();
+}
+
+// WEEKLY CHECK-IN
+function saveCheckin(){
+  if(!S.checkins)S.checkins={};
+  const week=getWeekId();
+  S.checkins[week]={
+    weight:parseFloat(document.getElementById('ciWeight').value)||'',
+    vo2:parseFloat(document.getElementById('ciVo2').value)||'',
+    waist:parseFloat(document.getElementById('ciWaist').value)||'',
+    notes:document.getElementById('ciNotes').value||'',
+    date:dk()
+  };
+  saveS();
+}
+function loadCheckin(){
+  if(!S.checkins)S.checkins={};
+  const week=getWeekId();
+  const ci=S.checkins[week]||{};
+  const w=document.getElementById('ciWeight');if(w)w.value=ci.weight||'';
+  const v=document.getElementById('ciVo2');if(v)v.value=ci.vo2||'';
+  const wa=document.getElementById('ciWaist');if(wa)wa.value=ci.waist||'';
+  const n=document.getElementById('ciNotes');if(n)n.value=ci.notes||'';
+}
+function getWeekId(){const d=new Date(),y=d.getFullYear(),jan1=new Date(y,0,1),days=Math.floor((d-jan1)/86400000);return y+'W'+Math.ceil((days+jan1.getDay()+1)/7)}
+
+// ANALYTICS
+function renderAnalytics(){
+  const el=document.getElementById('analyticsSection');if(!el)return;
+  if(!S.watch)S.watch={};
+  if(!S.checkins)S.checkins={};
+  const watchEntries=Object.keys(S.watch).sort();
+  const checkinEntries=Object.keys(S.checkins).sort();
+  let h='';
+  // Summary cards
+  const lastW=watchEntries.length>0?S.watch[watchEntries[watchEntries.length-1]]:{};
+  const allHr=watchEntries.map(k=>S.watch[k].hrAvg).filter(Boolean);
+  const allCals=watchEntries.map(k=>S.watch[k].cals).filter(Boolean);
+  const allDur=watchEntries.map(k=>S.watch[k].dur).filter(Boolean);
+  const weekCals=allCals.slice(-7).reduce((a,b)=>a+b,0);
+  const weekDur=allDur.slice(-7).reduce((a,b)=>a+b,0);
+  const avgHr=allHr.length>0?Math.round(allHr.reduce((a,b)=>a+b,0)/allHr.length):'-';
+  // Weight trend
+  const weights=checkinEntries.map(k=>({week:k,w:S.checkins[k].weight})).filter(e=>e.w);
+  const vo2s=checkinEntries.map(k=>({week:k,v:S.checkins[k].vo2})).filter(e=>e.v);
+  if(watchEntries.length===0&&checkinEntries.length===0){
+    h='<div class="tb">Unesi podatke sa Apple Watch-a nakon treninga i weekly check-in iznad. Analytics se gradi automatski.</div>';
+    el.innerHTML=h;return;
+  }
+  h+=`<div class="an-row">
+    <div class="an-mini"><div class="an-mini-v" style="color:var(--red)">${avgHr}</div><div class="an-mini-l">Avg HR</div></div>
+    <div class="an-mini"><div class="an-mini-v" style="color:var(--accent)">${weekCals||'-'}</div><div class="an-mini-l">Week kcal</div></div>
+    <div class="an-mini"><div class="an-mini-v" style="color:var(--blue)">${weekDur||'-'}</div><div class="an-mini-l">Week min</div></div>
+    <div class="an-mini"><div class="an-mini-v" style="color:var(--green)">${watchEntries.length}</div><div class="an-mini-l">Sessions</div></div>
+  </div>`;
+  // Weight trend chart
+  if(weights.length>0){
+    h+=`<div class="an-card"><div class="an-title">Weight Trend</div>`;
+    const W=320,H=100,pad=35,padR=10;
+    const vals=weights.map(e=>e.w);
+    const mn=Math.floor(Math.min(...vals)-1),mx=Math.ceil(Math.max(...vals)+1);
+    const rng=mx-mn||1;
+    let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:100px">`;
+    for(let i=0;i<=3;i++){const y=10+(H-30)*(1-i/3);const v=Math.round(mn+rng*i/3);svg+=`<line x1="${pad}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#252535" stroke-width=".5"/><text x="${pad-4}" y="${y+3}" fill="#5c5c72" font-size="8" text-anchor="end">${v}</text>`}
+    const pts=vals.map((v,i)=>{const x=pad+(vals.length===1?(W-pad-padR)/2:(W-pad-padR)*i/(vals.length-1));const y=10+(H-30)*(1-(v-mn)/rng);return{x,y,v}});
+    if(pts.length>1)svg+=`<path d="M${pts.map(p=>p.x+','+p.y).join(' L')}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
+    pts.forEach(p=>svg+=`<circle cx="${p.x}" cy="${p.y}" r="3" fill="var(--accent)"/>`);
+    svg+=`</svg>`;
+    h+=svg;
+    const first=vals[0],last=vals[vals.length-1],diff=last-first;
+    h+=`<div class="an-sub">${last} kg ${diff<0?'<span style="color:var(--green)">'+diff.toFixed(1)+' kg</span>':'<span style="color:var(--red)">+'+diff.toFixed(1)+' kg</span>'} since start</div></div>`;
+  }
+  // VO2 Max trend
+  if(vo2s.length>0){
+    h+=`<div class="an-card"><div class="an-title">VO2 Max Trend</div>`;
+    const last=vo2s[vo2s.length-1].v;
+    const first=vo2s[0].v;
+    const diff=last-first;
+    h+=`<div class="an-val" style="color:${last>=38?'var(--green)':'var(--yellow)'}">${last}</div>`;
+    h+=`<div class="an-sub">ml/min/kg ${diff>0?'<span style="color:var(--green)">+'+diff.toFixed(1)+'</span>':'<span style="color:var(--red)">'+diff.toFixed(1)+'</span>'} since start &middot; Target: 38+</div></div>`;
+  }
+  // HR per session
+  if(allHr.length>1){
+    h+=`<div class="an-card"><div class="an-title">Avg HR per Session</div>`;
+    const W2=320,H2=80,pad2=35;
+    let svg2=`<svg viewBox="0 0 ${W2} ${H2}" style="width:100%;height:80px">`;
+    const mn2=Math.min(...allHr)-5,mx2=Math.max(...allHr)+5,rng2=mx2-mn2;
+    const pts2=allHr.map((v,i)=>{const x=pad2+(allHr.length===1?(W2-pad2-10)/2:(W2-pad2-10)*i/(allHr.length-1));const y=5+(H2-15)*(1-(v-mn2)/rng2);return{x,y}});
+    if(pts2.length>1)svg2+=`<path d="M${pts2.map(p=>p.x+','+p.y).join(' L')}" fill="none" stroke="var(--red)" stroke-width="2"/>`;
+    pts2.forEach(p=>svg2+=`<circle cx="${p.x}" cy="${p.y}" r="3" fill="var(--red)"/>`);
+    svg2+=`</svg>`;
+    h+=svg2+`</div>`;
+  }
+  el.innerHTML=h;
 }
 
 // TIMER
