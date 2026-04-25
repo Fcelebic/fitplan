@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FitPlan">
+<meta name="theme-color" content="#ff6b35">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<title>FitPlan — Fejsal</title>
+<style>
+:root{--bg:#0a0a0f;--bg2:#111118;--bg3:#1a1a24;--card:#15151f;--border:#252535;--text:#eaeaf2;--text2:#8e8ea8;--text3:#5c5c72;--accent:#ff6b35;--accent2:#ff8c5a;--green:#34d399;--green2:#064e3b;--red:#f87171;--red2:#5f1d1d;--blue:#60a5fa;--blue2:#1e3050;--yellow:#fbbf24;--yellow2:#5c3a0f;--purple:#a78bfa;--purple2:#3b2d6b;--r:14px;--rs:10px;--safe-t:env(safe-area-inset-top,20px);--safe-b:env(safe-area-inset-bottom,20px)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.app{max-width:430px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
+.hdr{padding:calc(var(--safe-t)+6px) 20px 10px;background:var(--bg);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
+.hdr-top{display:flex;justify-content:space-between;align-items:center}
+.hdr h1{font-size:22px;font-weight:800;letter-spacing:-.5px}.hdr h1 span{color:var(--accent)}
+.hdr-date{font-size:12px;color:var(--text2);margin-top:1px}
+.wa-badge{background:linear-gradient(135deg,var(--accent),#e04500);color:#fff;font-size:11px;font-weight:800;padding:5px 10px;border-radius:20px;display:flex;align-items:center;gap:4px;cursor:pointer}
+.cnt{flex:1;padding:14px 14px calc(76px + var(--safe-b));overflow-y:auto;-webkit-overflow-scrolling:touch}
+.page{display:none;animation:fi .2s ease}.page.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--card);border-radius:var(--r);padding:14px;margin-bottom:10px;border:1px solid var(--border)}
+.card-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.card-t{font-size:14px;font-weight:700}
+.wk{display:flex;gap:5px;margin-bottom:14px;padding:2px 0}
+.dc{flex:1;text-align:center;padding:7px 2px;border-radius:var(--rs);background:var(--bg3);border:1.5px solid transparent;cursor:pointer;transition:.2s}
+.dc.act{background:var(--accent);color:#fff;border-color:var(--accent)}.dc.tod{border-color:var(--accent)}
+.dc .dn{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.dc.act .dn{color:rgba(255,255,255,.7)}.dc .dd{font-size:15px;font-weight:800;margin-top:1px}
+.dc .dt{width:5px;height:5px;border-radius:50%;margin:3px auto 0}
+.dt-g{background:var(--accent)}.dt-t{background:var(--green)}.dt-c{background:var(--blue)}.dt-r{background:var(--text3)}
+.dc.act .dt{background:#fff}
+.wh{background:linear-gradient(135deg,var(--bg3),var(--card));border-radius:var(--r);padding:18px;margin-bottom:14px;border:1px solid var(--border)}
+.wh-type{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:3px}
+.wh-name{font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px}
+.wh-meta{display:flex;gap:14px;font-size:12px;color:var(--text2)}
+.sl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin:18px 0 8px;padding-left:2px}
+.ex{background:var(--card);border-radius:var(--rs);margin-bottom:5px;border:1px solid var(--border);transition:.2s;overflow:hidden}
+.ex.done{opacity:.45;background:var(--bg3)}
+.ex-top{display:flex;align-items:flex-start;gap:10px;padding:12px;cursor:pointer}
+.ex-ck{width:22px;height:22px;border-radius:50%;border:2px solid var(--text3);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:.2s}
+.ex.done .ex-ck{background:var(--green);border-color:var(--green)}
+.ex-ck svg{width:13px;height:13px;opacity:0;transition:.2s}.ex.done .ex-ck svg{opacity:1}
+.ex-info{flex:1}.ex-name{font-size:14px;font-weight:600;margin-bottom:2px}
+.ex.done .ex-name{text-decoration:line-through}
+.ex-det{font-size:11px;color:var(--text2)}.ex-note{font-size:10px;color:var(--accent2);margin-top:3px;font-style:italic}
+.ex-sum{font-size:10px;color:var(--green);margin-top:3px;font-weight:600}
+/* Set logger */
+.set-log{padding:0 12px 12px;display:none}.ex.expanded .set-log{display:block}
+.set-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.set-num{width:18px;font-size:11px;color:var(--text3);font-weight:700;text-align:center;flex-shrink:0}
+.set-input{width:60px;padding:7px 6px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:700;text-align:center;font-family:inherit;outline:none;transition:.2s}
+.set-input:focus{border-color:var(--accent)}
+.set-x{font-size:11px;color:var(--text3);font-weight:700}
+.set-done-btn{width:30px;height:30px;border-radius:50%;border:2px solid var(--border);background:transparent;color:var(--text3);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;flex-shrink:0}
+.set-done-btn.checked{background:var(--green);border-color:var(--green);color:#fff}
+.set-add{background:none;border:1px dashed var(--border);border-radius:7px;padding:6px;width:100%;color:var(--text3);font-size:11px;font-weight:600;cursor:pointer;margin-top:2px}
+.set-vol{font-size:10px;color:var(--text3);margin-top:6px;text-align:right}
+/* Common */
+.tb{background:var(--bg3);border-radius:var(--rs);padding:10px 12px;margin-bottom:10px;border-left:3px solid var(--accent);font-size:12px;color:var(--text2);line-height:1.5}.tb strong{color:var(--text)}
+.mbr{display:flex;gap:6px;margin-bottom:14px}
+.mb{flex:1;background:var(--bg3);border-radius:var(--rs);padding:10px 6px;text-align:center}
+.mb-v{font-size:18px;font-weight:800}.mb-u{font-size:9px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.mb-l{font-size:9px;color:var(--text3);margin-top:1px}
+.mp .mb-v{color:var(--blue)}.mc .mb-v{color:var(--yellow)}.mf .mb-v{color:var(--purple)}.mk .mb-v{color:var(--accent)}
+.ml{background:var(--card);border-radius:var(--rs);padding:12px;margin-bottom:6px;border:1px solid var(--border);cursor:pointer}
+.ml-h{display:flex;justify-content:space-between;align-items:center}
+.ml-t{font-size:10px;color:var(--accent);font-weight:700}.ml-n{font-size:14px;font-weight:600;margin-top:1px}
+.ml-k{font-size:12px;color:var(--text2);font-weight:600}
+.ml-f{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:none}.ml.exp .ml-f{display:block}
+.fd{display:flex;justify-content:space-between;padding:4px 0;font-size:12px}.fd-n{color:var(--text)}.fd-a{color:var(--text2);font-size:11px}
+.ml-m{display:flex;gap:10px;margin-top:6px;font-size:10px;color:var(--text3)}.ml-m span{font-weight:600}
+.wtr{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.wg{width:32px;height:32px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:.2s}
+.wg.fil{background:var(--blue2);border-color:var(--blue)}
+.si{display:flex;align-items:center;gap:10px;padding:12px;background:var(--card);border-radius:var(--rs);margin-bottom:5px;border:1px solid var(--border);cursor:pointer}
+.si.done{opacity:.45}
+.si-i{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.si-h{background:var(--red2)}.si-s{background:var(--blue2)}.si-f{background:var(--green2)}.si-a{background:var(--yellow2)}
+.si-info{flex:1}.si-n{font-size:13px;font-weight:600}.si-d{font-size:11px;color:var(--text2);margin-top:1px}
+.si-dur{font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0}
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+.sc{background:var(--card);border-radius:var(--rs);padding:12px 6px;text-align:center;border:1px solid var(--border)}
+.sc-v{font-size:26px;font-weight:800}.sc-m{font-size:11px;color:var(--text3)}.sc-l{font-size:9px;color:var(--text2);margin-top:3px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.sr{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.sr:last-child{border:none}.sr-l{font-size:13px;color:var(--text2)}.sr-v{font-size:15px;font-weight:700}
+.sr-r{font-size:10px;font-weight:600;margin-top:1px}
+.sr-r.exc{color:var(--green)}.sr-r.gd{color:var(--blue)}.sr-r.avg{color:var(--yellow)}.sr-r.fr{color:var(--red)}.sr-r.hi{color:var(--red)}
+.gi{display:flex;align-items:center;gap:10px;padding:10px;background:var(--card);border-radius:var(--rs);margin-bottom:6px;border:1px solid var(--border)}
+.gi-i{font-size:22px}.gi-info{flex:1}.gi-t{font-size:13px;font-weight:600}
+.gi-bar{height:5px;background:var(--bg3);border-radius:3px;margin-top:5px;overflow:hidden}
+.gi-fill{height:100%;border-radius:3px;transition:width .5s}.gi-tgt{font-size:11px;color:var(--text3);margin-top:3px}
+.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(17,17,24,.92);border-top:1px solid var(--border);display:flex;justify-content:center;padding:6px 0 calc(6px + var(--safe-b));z-index:100;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.bnav-in{display:flex;max-width:430px;width:100%;justify-content:space-around}
+.ni{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 6px;cursor:pointer;border-radius:8px}
+.ni.act svg{color:var(--accent)}.ni.act .nl{color:var(--accent)}
+.ni svg{width:20px;height:20px;color:var(--text3);transition:.2s}
+.nl{font-size:9px;font-weight:600;color:var(--text3);transition:.2s}
+.tm{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
+.tm.vis{display:flex}.tm-c{text-align:center;padding:40px}
+.tm-d{font-size:68px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-2px}
+.tm-s{font-size:13px;color:var(--text2);margin-top:6px}
+.tm-ps{display:flex;gap:6px;margin-top:18px;justify-content:center;flex-wrap:wrap}
+.tp{padding:7px 14px;border-radius:18px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:700;cursor:pointer}
+.tp.act{background:var(--accent);border-color:var(--accent);color:#fff}
+.tm-bs{display:flex;gap:10px;margin-top:24px;justify-content:center}
+.tmb{padding:10px 24px;border-radius:24px;border:none;font-size:14px;font-weight:700;cursor:pointer}
+.tmb-p{background:var(--accent);color:#fff}.tmb-s{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+.sup-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border-radius:var(--rs);margin-bottom:5px;border:1px solid var(--border)}
+.sup-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}.sup-info{flex:1}
+.sup-name{font-size:13px;font-weight:600}.sup-dose{font-size:11px;color:var(--text2)}
+.sup-when{font-size:10px;color:var(--accent);font-weight:600}
+.tab-row{display:flex;gap:6px;margin-bottom:14px}
+.tab-btn{flex:1;padding:8px;text-align:center;border-radius:var(--rs);background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;transition:.2s}
+.tab-btn.act{background:var(--accent);border-color:var(--accent);color:#fff}
+.rules-box{background:var(--bg3);border-radius:var(--rs);padding:12px;margin-bottom:12px}
+.rules-box li{font-size:12px;color:var(--text2);margin-bottom:4px;list-style:none;padding-left:16px;position:relative}
+.rules-box li::before{content:'';position:absolute;left:0;top:6px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+/* Settings */
+.sched-row{display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--card);border-radius:var(--rs);margin-bottom:5px;border:1px solid var(--border)}
+.sched-day{font-size:14px;font-weight:700;width:50px}
+.sched-sel{flex:1;margin-left:10px;padding:8px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:600;font-family:inherit;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238e8ea8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:28px}
+.sched-dot{width:8px;height:8px;border-radius:50%;margin-right:8px;flex-shrink:0}
+.reset-btn{width:100%;padding:12px;border-radius:var(--rs);background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;margin-top:10px;font-family:inherit}
+/* History */
+.hist-modal{display:none;position:fixed;inset:0;background:var(--bg);z-index:150;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.hist-modal.vis{display:block}
+.hist-hdr{display:flex;align-items:center;justify-content:space-between;padding:calc(var(--safe-t)+8px) 16px 12px;position:sticky;top:0;background:var(--bg);z-index:10;border-bottom:1px solid var(--border)}
+.hist-back{background:none;border:none;color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.hist-title{font-size:16px;font-weight:800}
+.hist-cnt{padding:14px 14px calc(20px + var(--safe-b))}
+.hist-sel{width:100%;padding:10px 12px;border-radius:var(--rs);background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;font-family:inherit;margin-bottom:14px;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238e8ea8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+.chart-wrap{background:var(--card);border-radius:var(--r);padding:14px;margin-bottom:14px;border:1px solid var(--border)}
+.chart-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.chart-svg{width:100%;height:160px}
+.chart-empty{text-align:center;padding:30px;color:var(--text3);font-size:13px}
+.hist-entry{background:var(--card);border-radius:var(--rs);padding:12px;margin-bottom:6px;border:1px solid var(--border)}
+.hist-date{font-size:11px;color:var(--accent);font-weight:700}
+.hist-sets{font-size:12px;color:var(--text2);margin-top:4px}
+.hist-vol{font-size:11px;color:var(--text3);margin-top:3px}
+.pr-badge{display:inline-block;background:var(--yellow2);color:var(--yellow);font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px}
+/* Month Calendar */
+.cal-modal{display:none;position:fixed;inset:0;background:var(--bg);z-index:140;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.cal-modal.vis{display:block}
+.cal-hdr{display:flex;align-items:center;justify-content:space-between;padding:calc(var(--safe-t)+8px) 16px 12px;position:sticky;top:0;background:var(--bg);z-index:10;border-bottom:1px solid var(--border)}
+.cal-nav{background:none;border:none;color:var(--accent);font-size:20px;font-weight:700;cursor:pointer;padding:8px 12px;font-family:inherit}
+.cal-month{font-size:16px;font-weight:800}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:8px 12px}
+.cal-dh{text-align:center;font-size:9px;font-weight:700;color:var(--text3);padding:8px 0;text-transform:uppercase}
+.cal-d{text-align:center;padding:6px 2px;border-radius:8px;cursor:pointer;min-height:42px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:.15s}
+.cal-d.empty{cursor:default}
+.cal-d .cd-num{font-size:13px;font-weight:600;color:var(--text2)}
+.cal-d.today .cd-num{color:var(--accent);font-weight:800}
+.cal-d.selected{background:var(--accent);border-radius:8px}
+.cal-d.selected .cd-num{color:#fff}
+.cal-d .cd-dot{width:5px;height:5px;border-radius:50%}
+.cal-d.selected .cd-dot{background:#fff !important}
+.cal-d.has-log .cd-num{color:var(--text)}
+.cal-d.has-log::after{content:'';display:block;width:3px;height:3px;border-radius:50%;background:var(--green);margin-top:1px}
+.cal-detail{padding:12px;margin:8px 12px;background:var(--card);border-radius:var(--r);border:1px solid var(--border)}
+.cal-detail-type{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.cal-detail-name{font-size:16px;font-weight:700;margin-bottom:6px}
+.cal-detail-log{font-size:12px;color:var(--text2);line-height:1.6}
+.cal-detail-log strong{color:var(--text)}
+.cal-btn-go{margin-top:10px;background:var(--accent);color:#fff;border:none;border-radius:20px;padding:8px 20px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+/* Skip day */
+.skip-bar{display:flex;gap:8px;margin-bottom:12px}
+.skip-btn{flex:1;padding:10px;border-radius:var(--rs);border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;transition:.2s}
+.skip-btn:active{transform:scale(.97)}
+.skip-btn.skipped{background:var(--red2);border-color:var(--red);color:var(--red)}
+.skipped-banner{background:var(--red2);border:1px solid var(--red);border-radius:var(--rs);padding:14px;text-align:center;margin-bottom:12px;color:var(--red);font-weight:700;font-size:14px}
+.cal-d.skipped .cd-num{color:var(--red);text-decoration:line-through}
+/* YouTube link */
+.ex-yt{width:26px;height:26px;border-radius:6px;background:var(--red2);border:none;color:var(--red);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;margin-top:1px}
+.ex-yt:active{transform:scale(.9)}
+.ex-yt svg{width:14px;height:14px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hdr"><div class="hdr-top"><div><h1>Fit<span>Plan</span></h1><div class="hdr-date" id="hDate"></div></div><div style="display:flex;gap:8px;align-items:center"><button onclick="openCal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px">&#128197;</button><div class="wa-badge" onclick="nav('stats')">WA <b>32</b></div></div></div></div>
+  <div class="cnt">
+    <div class="page active" id="p-schedule"><div class="wk" id="weekStrip"></div><div id="dayContent"></div></div>
+    <div class="page" id="p-nutrition">
+      <div class="tab-row"><div class="tab-btn act" id="nt-t" onclick="setNut('training')">Training Day</div><div class="tab-btn" id="nt-r" onclick="setNut('rest')">Rest / Cardio Day</div></div>
+      <div id="macroSum"></div>
+      <div class="card" style="padding:10px 14px"><div class="card-h" style="margin-bottom:6px"><span class="card-t">Water</span><span id="wCnt" style="font-size:12px;color:var(--text2)">0/10</span></div><div class="wtr" id="wTr"></div></div>
+      <div class="sl">Meals</div><div id="mealList"></div>
+      <div class="sl">Supplementation</div><div class="tb"><strong>Obavezni stack</strong> — uzimaj svaki dan, ne preskaci</div><div id="supList"></div>
+      <div class="sl">Pravila</div><div class="rules-box"><ul><li>Voda: 3-4 L dnevno</li><li>80% clean food, 20% flexibilno</li><li>1 cheat meal sedmicno (vikend)</li><li>Protein u svakom obroku</li><li>Ne jesti 2h prije spavanja (osim casein/sir)</li><li>Alkohol: min. — prazne kalorije</li></ul></div>
+    </div>
+    <div class="page" id="p-mobility">
+      <div class="tb"><strong>Prioritet #1:</strong> Hip fleksija 106° (FAIR). Cilj: 120°+. Radi hip rutinu svaki dan, min 10 min.</div>
+      <div class="tb" style="border-left-color:var(--blue)"><strong>Prioritet #2:</strong> AC zglob desnog ramena — shoulder prehab 3x sedmicno. Cilj: smanjiti upalu, stabilizovati lopaticu.</div>
+      <div class="sl">Hip Mobility — Svaki dan (10 min)</div><div id="mobDaily"></div>
+      <div class="sl">Shoulder Prehab — AC Zglob (5 min, 3x/sed)</div><div id="mobShoulder"></div>
+      <div class="sl">Pre-workout Warm-up</div><div id="mobWarm"></div>
+      <div class="sl">Post-workout Cool-down</div><div id="mobCool"></div>
+      <div class="sl">Vecernji stretch (optional)</div><div id="mobEve"></div>
+    </div>
+    <div class="page" id="p-stats">
+      <div style="text-align:center;margin-bottom:14px"><button onclick="openHist()" style="background:var(--accent);color:#fff;border:none;border-radius:24px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">Training History &amp; Progress</button></div>
+      <div class="card" style="text-align:center;padding:18px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:700">Wellness Age</div><div style="font-size:52px;font-weight:800;color:var(--green);line-height:1">32</div><div style="font-size:12px;color:var(--text2);margin-top:3px">Chronological: 34 &middot; 2 god mladji</div></div>
+      <div class="sg"><div class="sc"><div class="sc-v" style="color:var(--purple)">97</div><div class="sc-m">/100</div><div class="sc-l">Mind</div></div><div class="sc"><div class="sc-v" style="color:var(--green)">90</div><div class="sc-m">/100</div><div class="sc-l">Balance</div></div><div class="sc"><div class="sc-v" style="color:var(--blue)">73</div><div class="sc-m">/100</div><div class="sc-l">Mobility</div></div><div class="sc"><div class="sc-v" style="color:var(--blue)">71</div><div class="sc-m">/100</div><div class="sc-l">Strength</div></div><div class="sc"><div class="sc-v" style="color:var(--yellow)">63</div><div class="sc-m">/100</div><div class="sc-l">Body</div></div><div class="sc"><div class="sc-v" style="color:var(--red)">27</div><div class="sc-m">/100</div><div class="sc-l">Cardio</div></div></div>
+      <div class="sl">Body Composition</div>
+      <div class="card" style="padding:10px 14px"><div class="sr"><span class="sr-l">Weight</span><div><span class="sr-v">102.9 kg</span><div class="sr-r hi">HIGH (-1.1kg trend)</div></div></div><div class="sr"><span class="sr-l">Body Fat</span><div><span class="sr-v">19.4%</span><div class="sr-r avg">19.9 kg</div></div></div><div class="sr"><span class="sr-l">Muscle Mass</span><div><span class="sr-v">48.2 kg</span><div class="sr-r exc">EXCELLENT</div></div></div><div class="sr"><span class="sr-l">BMI</span><div><span class="sr-v">28.8</span><div class="sr-r hi">HIGH (muscular)</div></div></div><div class="sr"><span class="sr-l">BMR</span><div><span class="sr-v">2143 kcal</span><div class="sr-r exc">EXCELLENT</div></div></div><div class="sr"><span class="sr-l">Phase Angle</span><div><span class="sr-v">7.1°</span><div class="sr-r gd">GOOD</div></div></div><div class="sr"><span class="sr-l">VO2 Max</span><div><span class="sr-v">29.2</span><div class="sr-r fr">FAIR</div></div></div></div>
+      <div class="sl">MRI — Desno Rame (Apr 2026)</div>
+      <div class="tb"><strong>AC zglob:</strong> Posttraumatska degeneracija — neravne zglobne plohe, hipertrofija sinovije, edematozni CC ligamenti. Buford kompleks (anatomska varijacija, ne povreda). Rotatorna manzeta i biceps OK. Push vjezbe prilagodene — izbjegavaj barbell OHP i dips.</div>
+      <div class="sl">Strength Tests</div>
+      <div class="card" style="padding:10px 14px"><div class="sr"><span class="sr-l">Chest Press</span><div><span class="sr-v">144.8 kg</span><div class="sr-r exc">EXCELLENT</div></div></div><div class="sr"><span class="sr-l">Lat Pulldown</span><div><span class="sr-v">127.5 kg</span><div class="sr-r exc">EXCELLENT</div></div></div><div class="sr"><span class="sr-l">Leg Press</span><div><span class="sr-v">284.6 kg</span><div class="sr-r gd">GOOD</div></div></div></div>
+      <div class="sl">12-Week Goals</div>
+      <div class="gi"><div class="gi-i">&#9878;</div><div class="gi-info"><div class="gi-t">Tezina: 102.9 &rarr; 93-95 kg</div><div class="gi-bar"><div class="gi-fill" style="width:10%;background:var(--accent)"></div></div><div class="gi-tgt">-8 do -10 kg, zadrzati masu</div></div></div>
+      <div class="gi"><div class="gi-i">&#127939;</div><div class="gi-info"><div class="gi-t">VO2 Max: 29.2 &rarr; 38+</div><div class="gi-bar"><div class="gi-fill" style="width:12%;background:var(--red)"></div></div><div class="gi-tgt">Zone 2 + HIIT intervali</div></div></div>
+      <div class="gi"><div class="gi-i">&#129496;</div><div class="gi-info"><div class="gi-t">Hip fleksija: 106° &rarr; 120°+</div><div class="gi-bar"><div class="gi-fill" style="width:30%;background:var(--yellow)"></div></div><div class="gi-tgt">Daily hip mobility 10 min</div></div></div>
+      <div class="gi"><div class="gi-i">&#128170;</div><div class="gi-info"><div class="gi-t">BF: 19.4% &rarr; 13-15%</div><div class="gi-bar"><div class="gi-fill" style="width:15%;background:var(--blue)"></div></div><div class="gi-tgt">Ravan stomak, trunk fat redukcija</div></div></div>
+      <div class="gi"><div class="gi-i">&#128175;</div><div class="gi-info"><div class="gi-t">Strength: Maintain / Grow</div><div class="gi-bar"><div class="gi-fill" style="width:90%;background:var(--green)"></div></div><div class="gi-tgt">Chest 144kg, Pull 127kg, Legs 284kg</div></div></div>
+      <div style="margin-top:14px;text-align:center;font-size:10px;color:var(--text3);padding:8px">Fitpass / Technogym &middot; Apr 17, 2026<br>Fitpass Centar Sarajevo &middot; Trainer: Adna Ljustak</div>
+    </div>
+    <!-- SETTINGS -->
+    <div class="page" id="p-settings">
+      <div class="sl">Weekly Schedule</div>
+      <div class="tb"><strong>Prilagodi raspored</strong> — promijeni koji trening je koji dan. Raspored se cuva automatski.</div>
+      <div id="scheduleEditor"></div>
+      <button class="reset-btn" onclick="resetSchedule()">Reset to Default</button>
+      <div class="sl" style="margin-top:24px">App Info</div>
+      <div class="card" style="padding:12px"><div style="font-size:12px;color:var(--text2);line-height:1.6">
+        <strong style="color:var(--text)">FitPlan v3</strong><br>
+        Based on Fitpass Wellness Report Apr 17, 2026<br>
+        AC shoulder adaptation active<br>
+        Data saved locally on device
+      </div></div>
+    </div>
+  </div>
+  <!-- Nav -->
+  <div class="bnav"><div class="bnav-in">
+    <div class="ni act" onclick="nav('schedule')" id="n-schedule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nl">Schedule</span></div>
+    <div class="ni" onclick="nav('nutrition')" id="n-nutrition"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg><span class="nl">Nutrition</span></div>
+    <div class="ni" onclick="nav('mobility')" id="n-mobility"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><path d="M5 22l3-9 4 3 4-3 3 9"/><path d="M12 10v4"/></svg><span class="nl">Mobility</span></div>
+    <div class="ni" onclick="nav('stats')" id="n-stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span class="nl">Stats</span></div>
+    <div class="ni" onclick="nav('settings')" id="n-settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span class="nl">Settings</span></div>
+  </div></div>
+  <!-- Timer -->
+  <div class="tm" id="timerModal"><div class="tm-c"><div class="tm-d" id="tmDisp">1:30</div><div class="tm-s" id="tmStat">Rest Timer</div><div class="tm-ps"><div class="tp" onclick="setTm(60)">1:00</div><div class="tp act" onclick="setTm(90)">1:30</div><div class="tp" onclick="setTm(120)">2:00</div><div class="tp" onclick="setTm(180)">3:00</div></div><div class="tm-bs"><button class="tmb tmb-s" onclick="closeTm()">Close</button><button class="tmb tmb-p" id="tmBtn" onclick="togTm()">Start</button></div></div></div>
+  <!-- Calendar Modal -->
+  <div class="cal-modal" id="calModal">
+    <div class="cal-hdr"><button class="cal-nav" onclick="calPrev()">&larr;</button><div class="cal-month" id="calMonth"></div><button class="cal-nav" onclick="calNext()">&rarr;</button></div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div id="calDetail"></div>
+    <div style="text-align:center;padding:16px"><button onclick="closeCal()" style="background:var(--bg3);color:var(--text2);border:1px solid var(--border);border-radius:20px;padding:10px 24px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Close Calendar</button></div>
+  </div>
+  <!-- History Modal -->
+  <div class="hist-modal" id="histModal">
+    <div class="hist-hdr"><button class="hist-back" onclick="closeHist()">&larr; Back</button><div class="hist-title">Training History</div><div style="width:50px"></div></div>
+    <div class="hist-cnt"><select class="hist-sel" id="histExSel" onchange="renderHist()"></select><div id="histChart"></div><div class="sl">Log</div><div id="histLog"></div></div>
+  </div>
+</div>
+
+<script>
+const P={
+0:{type:'gym',label:'PUSH DAY',name:'Gornji dio — Push + Cardio',dur:'70 min',focus:'Prsa, Ramena, Triceps (AC-safe)',color:'var(--accent)',sections:[
+{name:'Shoulder Warm-up (8 min)',ex:[
+{n:'Band Pull-Aparts',d:'3 x 15',note:'Aktivacija straznjeg ramena — zagrijava RC i stabilizuje lopaticu'},
+{n:'Face Pull (light band)',d:'2 x 15',note:'Zagrij straznji delt + external rotation'},
+{n:'Shoulder CARs',d:'5 svaki smjer, svaka ruka',note:'Sporo, full range — razgibava AC zglob'},
+{n:'Prone Y-T-W Raises',d:'2 x 8 svaka pozicija',note:'Sa 1-2kg. Aktivira donji trapez i serratus.'},
+{n:'Wall Slides',d:'2 x 10',note:'Ledja uz zid, ruke klize gore-dolje.'},
+{n:'Hip Flexor Stretch',d:'2 x 30s svaka strana',note:'Prioritet: hip mobility'},
+]},
+{name:'Push — AC-Prilagodene vjezbe',ex:[
+{n:'DB Bench Press (neutralni grip)',d:'4 x 6-8 @ RPE 8',note:'Manja AC kompresija nego barbell.'},
+{n:'Incline DB Press (30°)',d:'3 x 8-10',note:'Ugao smanjuje pritisak na AC.'},
+{n:'Landmine Press',d:'3 x 10 svaka ruka',note:'ZAMJENA za OHP — nema overhead kompresije AC zgloba.'},
+{n:'Lateral Raises',d:'3 x 12-15',note:'Ne opterecuju AC direktno'},
+{n:'Cable Triceps Pushdown',d:'3 x 10-12',note:'ZAMJENA za Dips'},
+{n:'Svend Press',d:'2 x 12',note:'Lagana ploca, aktivira prsa bez AC stresa.'},
+]},
+{name:'Core (5 min)',ex:[{n:'Plank',d:'3 x 45-60s'},{n:'Cable Crunch',d:'3 x 15'}]},
+{name:'Cardio Finisher — HIIT (10 min)',ex:[{n:'Treadmill intervali',d:'8 rundi: 30s sprint (10-12 km/h) + 60s hod',note:'KEY za VO2 max'}]},
+{name:'Cool-down + Shoulder Care (5 min)',ex:[
+{n:'Cross-body Shoulder Stretch',d:'30s svaka strana',note:'Lagano — ne forsirati AC zglob'},
+{n:'Sleeper Stretch',d:'30s svaka strana',note:'Internal rotation — AC decompression'},
+{n:'Hip Flexor Stretch',d:'45s svaka strana'},{n:'Pigeon Stretch',d:'45s svaka strana'},
+]},
+]},
+1:{type:'tennis',label:'TENIS',name:'Tennis Session',dur:'60 min',focus:'Agility, Cardio, Footwork',color:'var(--green)',sections:[
+{name:'Pre-Tennis Warm-up (10 min)',ex:[{n:'Light Jog',d:'3 min'},{n:'Dynamic Leg Swings',d:'10 svaka noga'},{n:'Hip 90/90 Switches',d:'2 x 8 svaka'},{n:'Ankle Circles',d:'10 svaki smjer'},{n:'Arm Circles + Wrist Rotations',d:'30s svaki'}]},
+{name:'Tennis',ex:[{n:'Tennis Match / Drills',d:'60 min',note:'Focus na footwork'}]},
+{name:'Post-Tennis Stretch (10 min)',ex:[{n:'Standing Quad Stretch',d:'30s svaka'},{n:'Hip Flexor Lunge Stretch',d:'45s svaka',note:'Duboko, postepeno'},{n:'Calf Stretch',d:'30s svaka'},{n:'Cross-body Shoulder Stretch',d:'30s svaka'},{n:'Hamstring Stretch',d:'45s svaka'}]},
+]},
+2:{type:'gym',label:'PULL DAY',name:'Ledja + Biceps + Core',dur:'65 min',focus:'Ledja, Biceps, Core',color:'var(--blue)',sections:[
+{name:'Warm-up (5 min)',ex:[{n:'Cat-Cow',d:'2 x 10'},{n:'Band Pull-Aparts',d:'2 x 15'},{n:'Dead Hangs',d:'2 x 20s'},{n:'Deep Squat Hold',d:'2 x 20s'}]},
+{name:'Pull — Glavne vjezbe',ex:[
+{n:'Lat Pulldown / Zgibovi',d:'4 x 8 @ RPE 8',note:'Pull pokreti su AC-safe.'},
+{n:'Barbell Row',d:'4 x 8'},{n:'Seated Cable Row',d:'3 x 10'},
+{n:'Face Pulls',d:'3 x 15',note:'OBAVEZNO — stabilizuje lopaticu, stiti AC zglob'},
+{n:'Biceps Curl (bar)',d:'3 x 10'},{n:'Hammer Curl',d:'3 x 10'},
+]},
+{name:'Core',ex:[{n:'Hanging Leg Raises',d:'3 x 10-12',note:'Hip fleksori + abs'},{n:'Plank',d:'3 x 45-60s'},{n:'Pallof Press',d:'3 x 10 svaka'}]},
+{name:'Cool-down + Shoulder Care (5 min)',ex:[{n:'Band Pull-Aparts',d:'2 x 15',note:'Blood flow u straznji delt'},{n:'Sleeper Stretch',d:'30s svaka strana'},{n:'Hip Flexor Stretch',d:'45s svaka strana'},{n:'Child\'s Pose',d:'45s'},{n:'Thoracic Rotation',d:'8 svaka strana'}]},
+]},
+3:{type:'cardio',label:'CARDIO DAY',name:'Zone 2 — Aerobna baza',dur:'50 min',focus:'VO2 Max, Fat Burn, Recovery',color:'var(--blue)',sections:[
+{name:'Warm-up (5 min)',ex:[{n:'Lagani hod na traci',d:'5 min @ 5-6 km/h, nagib 1%'}]},
+{name:'Zone 2 Cardio — Treadmill',ex:[{n:'Incline Walking / Light Jog',d:'35-40 min @ HR 125-145 bpm',note:'6.5-7.2 km/h, nagib 3-6%. OVO gradi aerobnu bazu.'}]},
+{name:'Cool-down (5 min)',ex:[{n:'Lagani hod',d:'3 min @ 5 km/h'},{n:'Deep Breathing',d:'2 min'}]},
+{name:'Hip Mobility (10 min)',ex:[{n:'Couch Stretch',d:'60s svaka strana',note:'Najvaznija za hip fleksore'},{n:'90/90 Hip Switches',d:'3 x 8 svaka'},{n:'Pigeon Stretch',d:'60s svaka strana'},{n:'Frog Stretch',d:'45s'},{n:'Butterfly Stretch',d:'45s'},{n:'Deep Squat Hold',d:'60s'}]},
+]},
+4:{type:'gym',label:'LEG DAY',name:'Noge + Kratki Cardio',dur:'70 min',focus:'Noge, Glutes, Calves',color:'var(--green)',sections:[
+{name:'Warm-up (5 min)',ex:[{n:'Banded Clamshells',d:'2 x 12 svaka'},{n:'Glute Bridges',d:'2 x 12'},{n:'Deep Squat to Stand',d:'2 x 8'},{n:'Leg Swings',d:'10 svaka, svaki smjer'}]},
+{name:'Legs — Glavne vjezbe',ex:[
+{n:'Squat (ili Leg Press)',d:'4 x 6-8 @ RPE 8',note:'Squat bolji za hip mobility'},
+{n:'Romanian Deadlift',d:'3 x 8-10',note:'Hamstring fokus + hip hinge'},
+{n:'Walking Lunges',d:'3 x 10 po nozi'},{n:'Leg Curl',d:'3 x 10'},
+{n:'Calf Raises',d:'4 x 12-15',note:'Drzi 2s na vrhu'},
+]},
+{name:'Core (5 min)',ex:[{n:'Hanging Leg Raises',d:'3 x 10-12'},{n:'Cable Crunch',d:'3 x 15'}]},
+{name:'Cardio Finisher (10 min)',ex:[{n:'Rowing Machine intervali',d:'5 rundi: 2 min hard / 1 min easy'}]},
+{name:'Cool-down (5 min)',ex:[{n:'Hip Flexor Stretch',d:'60s svaka strana'},{n:'Hamstring Stretch',d:'45s svaka'},{n:'Quad Stretch',d:'30s svaka'},{n:'Child\'s Pose',d:'45s'}]},
+]},
+5:{type:'tennis',label:'TENIS',name:'Tennis Session',dur:'60 min',focus:'Agility, Cardio, Fun',color:'var(--green)',sections:[
+{name:'Pre-Tennis Warm-up (10 min)',ex:[{n:'Light Jog',d:'3 min'},{n:'Dynamic Leg Swings',d:'10 svaka noga'},{n:'Hip 90/90 Switches',d:'2 x 8'},{n:'Ankle Circles + Wrist Rotations',d:'30s svaki'},{n:'Shadow Tennis Footwork',d:'2 min'}]},
+{name:'Tennis',ex:[{n:'Tennis Match / Drills',d:'60 min',note:'Prati HR ako imas sat.'}]},
+{name:'Post-Tennis Full Stretch (12 min)',ex:[{n:'Hip Flexor Lunge Stretch',d:'60s svaka',note:'Duboko! Najslabiji dio.'},{n:'Pigeon Stretch',d:'45s svaka'},{n:'Standing Quad Stretch',d:'30s svaka'},{n:'Calf Stretch',d:'30s svaka'},{n:'Shoulder Cross-body',d:'30s svaka'},{n:'Seated Forward Fold',d:'45s'},{n:'Lying Spinal Twist',d:'30s svaka'}]},
+]},
+6:{type:'rest',label:'AKTIVNI ODMOR',name:'Recovery + Mobilnost',dur:'30 min',focus:'Odmor, Stretching, Setnja',color:'var(--text3)',sections:[
+{name:'Light Activity',ex:[{n:'Setnja vani',d:'20-30 min lagano',note:'Zone 1. Samo opusti se.'}]},
+{name:'Full Mobility Routine (15 min)',ex:[{n:'Couch Stretch',d:'60s svaka strana'},{n:'90/90 Hip Switches',d:'3 x 8 svaka'},{n:'Deep Squat Hold',d:'3 x 30s'},{n:'Pigeon Stretch',d:'60s svaka'},{n:'Frog Stretch',d:'45s'},{n:'Seated Forward Fold',d:'45s'},{n:'Cat-Cow',d:'10 reps'},{n:'Thoracic Rotation',d:'8 svaka'},{n:'Neck Lateral Stretch',d:'20s svaka',note:'Odrzaj 72° excellent'}]},
+{name:'Recovery Tips',ex:[{n:'Sleep 7-9h',d:'Non-negotiable',note:'Growth hormone, muscle repair'},{n:'Foam Roll (opcionalno)',d:'5-10 min'}]},
+]}
+};
+
+const PNAMES={0:'Push (AC-safe)',1:'Tennis',2:'Pull + Core',3:'Cardio Zone 2',4:'Legs + Cardio',5:'Tennis',6:'Recovery + Mobilnost'};
+const PCOLORS={gym:'var(--accent)',tennis:'var(--green)',cardio:'var(--blue)',rest:'var(--text3)'};
+const PDOTS={gym:'dt-g',tennis:'dt-t',cardio:'dt-c',rest:'dt-r'};
+const DEFAULT_SCHED=[0,1,2,3,4,5,6];
+
+const NUT={training:{kcal:2600,pro:200,carb:240,fat:80,meals:[{time:'07:00',name:'Dorucak',kcal:550,pro:35,carb:40,fat:25,foods:[{n:'4 jaja (scrambled)',a:'240g'},{n:'Integralni hljeb',a:'1 kriska'},{n:'Avokado',a:'1/2'},{n:'Paradajz + krastavac',a:'po zelji'}]},{time:'10:00',name:'Snack 1',kcal:300,pro:28,carb:25,fat:10,foods:[{n:'Grecki jogurt',a:'200g'},{n:'Banana',a:'1 kom'},{n:'Bademi',a:'20g'}]},{time:'13:00',name:'Rucak',kcal:700,pro:50,carb:65,fat:18,foods:[{n:'Pileca prsa / junetina',a:'200g'},{n:'Riza ili krompir',a:'150g'},{n:'Salata + maslinovo ulje',a:'1 zlica'},{n:'Sezonsko povrce',a:'150g'}]},{time:'16:00',name:'Pre-Workout',kcal:350,pro:30,carb:50,fat:5,foods:[{n:'Zobene pahuljice',a:'60g'},{n:'Whey protein',a:'30g'},{n:'Banana',a:'1 kom'}]},{time:'19:30',name:'Vecera (Post-Workout)',kcal:550,pro:42,carb:45,fat:18,foods:[{n:'Losos ili bijela riba',a:'200g'},{n:'Slatki krompir',a:'150g'},{n:'Brokoli / zeleno povrce',a:'150g'}]},{time:'21:30',name:'Casein Snack',kcal:150,pro:20,carb:5,fat:6,foods:[{n:'Cottage cheese',a:'150g'},{n:'Par oraha',a:'10g'}]}]},rest:{kcal:2300,pro:190,carb:180,fat:80,meals:[{time:'08:00',name:'Dorucak',kcal:480,pro:32,carb:25,fat:28,foods:[{n:'3 jaja + 2 bjelanceta',a:''},{n:'Avokado',a:'1/2'},{n:'Paradajz',a:'1 kom'},{n:'Integralni hljeb',a:'1 kriska'}]},{time:'10:30',name:'Snack',kcal:250,pro:25,carb:18,fat:10,foods:[{n:'Grecki jogurt',a:'200g'},{n:'Borovnice',a:'50g'},{n:'Bademi',a:'15g'}]},{time:'13:00',name:'Rucak',kcal:620,pro:48,carb:55,fat:18,foods:[{n:'Tuna steak ili piletina',a:'200g'},{n:'Kvinoja ili riza',a:'120g'},{n:'Velika salata',a:''},{n:'Maslinovo ulje',a:'1 zlica'}]},{time:'16:00',name:'Snack 2',kcal:250,pro:28,carb:15,fat:8,foods:[{n:'Whey shake',a:'30g'},{n:'Jabuka',a:'1 kom'}]},{time:'19:00',name:'Vecera',kcal:550,pro:42,carb:40,fat:20,foods:[{n:'Bijela riba ili puretina',a:'200g'},{n:'Peceni krompir',a:'120g'},{n:'Grilovano povrce',a:'200g'}]},{time:'21:00',name:'Casein Snack',kcal:140,pro:18,carb:4,fat:6,foods:[{n:'Cottage cheese',a:'130g'},{n:'Par oraha',a:'8g'}]}]}};
+const SUPS=[{name:'Kreatin Monohidrat',dose:'5g dnevno',when:'Ujutro ili post-workout',cat:'must',note:'Svaki dan, i rest dane.'},{name:'Omega-3 (Fish Oil)',dose:'2000mg (EPA+DHA)',when:'Uz obrok',cat:'must',note:'Smanjuje upalu, kardio zdravlje'},{name:'Vitamin D3 + K2',dose:'4000 IU D3 + 100mcg K2',when:'Ujutro uz dorucak',cat:'must',note:'Esencijalno za BiH klimu'},{name:'Magnezij (citrat/glicintat)',dose:'400mg',when:'Navecer prije spavanja',cat:'must',note:'Bolji san, oporavak misica'},{name:'Cink',dose:'25mg',when:'Navecer sa magnezijem',cat:'must',note:'Imunitet, testosteron'},{name:'Whey Protein',dose:'30g (1 scoop)',when:'Post-workout ili u snack',cat:'must',note:'Dopuni protein target'},{name:'Elektroliti',dose:'1 tableta ili sachet',when:'Tenis dani + cardio',cat:'opt',note:'Posebno ljeti.'},{name:'Kofein (pre-workout)',dose:'200mg (ili kafa)',when:'30 min prije treninga',cat:'opt',note:'Opcionalno. Ne nakon 15h.'}];
+const MOB={daily:[{n:'Hip Flexor Stretch (kneeling)',d:'Koljenica na podu, guraj kukove naprijed',dur:'60s/str',i:'h'},{n:'Deep Squat Hold',d:'Tezina na petama, ledja ravna',dur:'60s',i:'h'},{n:'Glute Bridge',d:'Stisni glute na vrhu, 2s pauza',dur:'3x12',i:'h'},{n:'Hamstring Stretch',d:'Noga na povisenoj povrsini',dur:'30s/str',i:'h'},{n:'World\'s Greatest Stretch',d:'Lunge + rotacija + reach',dur:'5x svaka',i:'f'}],shoulder:[{n:'Band Pull-Aparts',d:'Lagana banda, squeeze lopatice. Stiti AC zglob.',dur:'3x15',i:'s'},{n:'Prone Y-T-W Raises',d:'Lezi na klupi, Y, T, W pozicije sa 1-2kg.',dur:'2x8 svaka',i:'s'},{n:'Shoulder CARs',d:'Polako rotiraj ruku punim krugom.',dur:'5x svaka',i:'s'},{n:'Wall Slides',d:'Ledja i laktovi uz zid, klizi gore-dolje.',dur:'2x10',i:'s'},{n:'Sleeper Stretch',d:'Lezi na desnom boku, internal rotation.',dur:'45s',i:'s'},{n:'Cross-body Stretch',d:'Desnu ruku povuci preko grudi. Lagano.',dur:'30s',i:'s'}],warm:[{n:'Hip Circles',d:'Veliki krugovi, obje noge',dur:'10x svaka',i:'h'},{n:'Leg Swings (naprijed-nazad)',d:'Kontrolisano, full ROM',dur:'10x svaka',i:'h'},{n:'Leg Swings (strana)',d:'Preko tijela i van',dur:'10x svaka',i:'h'},{n:'Cat-Cow',d:'Sporo, puni range',dur:'10 reps',i:'f'},{n:'Band Pull-Aparts',d:'Squeeze lopatice',dur:'15 reps',i:'s'},{n:'Deep Squat to Stand',d:'Squat pa ustani',dur:'8 reps',i:'h'}],cool:[{n:'Hip Flexor Stretch',d:'Duboki lunge, drzi poziciju',dur:'60s/str',i:'h'},{n:'Pigeon Stretch',d:'Prednja noga pod uglom',dur:'45s/str',i:'h'},{n:'Seated Hamstring',d:'Jedna noga ispred, nagni se',dur:'30s/str',i:'h'},{n:'Child\'s Pose',d:'Ruke ispred, koljena siroko',dur:'45s',i:'f'},{n:'Thoracic Rotation',d:'Na bocku, rotiraj gornji dio',dur:'8x svaka',i:'f'}],eve:[{n:'Supine Hip Flexor',d:'Na ivici kreveta, noga visi',dur:'60s/str',i:'h'},{n:'Figure-4 Stretch',d:'Glezanj na suprotno koljeno',dur:'45s/str',i:'h'},{n:'Lying Spinal Twist',d:'Koljena u stranu, ramena ravna',dur:'45s/str',i:'f'},{n:'Hamstring w/ Strap',d:'Noga gore sa peskirom',dur:'45s/str',i:'h'},{n:'Child\'s Pose + Breathing',d:'Siroka koljena, duboko disanje',dur:'60s',i:'f'}]};
+
+// STATE
+const K='fp_v3';
+let S=loadS();
+function loadS(){
+  try{
+    const s=JSON.parse(localStorage.getItem(K));
+    if(s&&s.v===3)return s;
+    const old=JSON.parse(localStorage.getItem('fp_v2'));
+    if(old)return{v:3,sel:old.sel||0,schedule:[...DEFAULT_SCHED],done:old.done||{},water:old.water||{},mexp:old.mexp||{},nmode:old.nmode||'training',log:{},expanded:{}};
+  }catch(e){}
+  return{v:3,sel:0,schedule:[...DEFAULT_SCHED],done:{},water:{},mexp:{},nmode:'training',log:{},expanded:{}};
+}
+function saveS(){localStorage.setItem(K,JSON.stringify(S))}
+function fmtDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function dk(){return fmtDate(new Date())}
+function ck(d,s,e){return dk()+'_'+d+'_'+s+'_'+e}
+function parseSets(d){const m=d.match(/^(\d+)\s*x\s*(\d+)/);return m?{sets:parseInt(m[1]),reps:m[2]}:null}
+
+// NAV
+function nav(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(x=>x.classList.remove('act'));
+  document.getElementById('p-'+p).classList.add('active');
+  document.getElementById('n-'+p).classList.add('act');
+  if(p==='nutrition')renderNut();
+  if(p==='mobility')renderMob();
+  if(p==='settings')renderSettings();
+}
+
+// SCHEDULE
+function getProgram(dayIdx){return P[S.schedule[dayIdx]]}
+let weekOff=0;
+function renderWk(){
+  const s=document.getElementById('weekStrip'),t=new Date(),dow=t.getDay(),mo=dow===0?-6:1-dow;
+  const dn=['MON','TUE','WED','THU','FRI','SAT','SUN'];
+  const today=new Date();
+  s.innerHTML='';
+  const navHtml=weekOff!==0?`<div style="display:flex;justify-content:center;gap:12px;margin-bottom:8px"><button onclick="weekOff=0;renderWk();renderDay()" style="background:var(--bg3);border:1px solid var(--border);color:var(--accent);border-radius:16px;padding:5px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">&#8592; Back to this week</button></div>`:'';
+  document.getElementById('weekStrip').insertAdjacentHTML('beforebegin','');
+  const prev=document.getElementById('wkNav');if(prev)prev.remove();
+  if(weekOff!==0){const nav=document.createElement('div');nav.id='wkNav';nav.innerHTML=`<div style="display:flex;justify-content:center;margin-bottom:8px"><button onclick="weekOff=0;S.sel=new Date().getDay()===0?6:new Date().getDay()-1;saveS();renderWk();renderDay()" style="background:var(--bg3);border:1px solid var(--border);color:var(--accent);border-radius:16px;padding:5px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">&#8592; This week</button></div>`;s.parentNode.insertBefore(nav,s)}
+  for(let i=0;i<7;i++){
+    const d=new Date(t);d.setDate(t.getDate()+mo+i+weekOff*7);
+    const pr=getProgram(i);
+    const isTod=d.toDateString()===today.toDateString();
+    const isAct=S.sel===i;
+    const c=document.createElement('div');
+    c.className='dc'+(isAct?' act':'')+(isTod?' tod':'');
+    c.innerHTML=`<div class="dn">${dn[i]}</div><div class="dd">${d.getDate()}</div><div class="dt ${PDOTS[pr.type]}"></div>`;
+    c.onclick=()=>{S.sel=i;saveS();renderWk();renderDay()};
+    s.appendChild(c);
+  }
+}
+function getWeekDate(dayIdx){const t=new Date(),dow=t.getDay(),mo=dow===0?-6:1-dow;const d=new Date(t);d.setDate(t.getDate()+mo+dayIdx+weekOff*7);return fmtDate(d)}
+
+function ytLink(name){const q=encodeURIComponent(name+' exercise form');return'https://www.youtube.com/results?search_query='+q}
+function renderDay(){
+  const c=document.getElementById('dayContent'),di=S.sel,d=getProgram(di);
+  if(!d)return;
+  const today=getWeekDate(di);
+  const isSkipped=S.skipped&&S.skipped[today+'_'+di];
+  // Skip button
+  let h=`<div class="skip-bar"><button class="skip-btn ${isSkipped?'skipped':''}" onclick="toggleSkip(${di})">${isSkipped?'&#10005; Day Skipped — tap to undo':'Skip This Day'}</button></div>`;
+  if(isSkipped){h+=`<div class="skipped-banner">&#128564; Skipped</div>`;c.innerHTML=h;return}
+  h+=`<div class="wh"><div class="wh-type" style="color:${d.color}">${d.label}</div><div class="wh-name">${d.name}</div><div class="wh-meta"><span>${d.dur}</span><span style="color:var(--text3)">${d.focus}</span></div></div>`;
+  d.sections.forEach((sec,si)=>{
+    h+=`<div class="sl">${sec.name}</div>`;
+    sec.ex.forEach((e,ei)=>{
+      const key=ck(di,si,ei);
+      const sp=parseSets(e.d);
+      const exKey=e.n;
+      const logKey=today+'_'+exKey;
+      const sets=S.log[logKey]||[];
+      const allDone=sp?sets.length>=sp.sets&&sets.every(s=>s.done):S.done[key]||false;
+      const isExp=S.expanded[key]||false;
+      const lastData=getLastLog(exKey,today);
+      let summary='';
+      if(sp&&sets.length>0){const ws=sets.filter(s=>s.done);if(ws.length>0){const mn=Math.min(...ws.map(s=>s.kg)),mx=Math.max(...ws.map(s=>s.kg));summary=ws.length+'x '+(mn===mx?mn+'kg':mn+'-'+mx+'kg');}}
+      const yt=`<a href="${ytLink(e.n)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="ex-yt" title="How to"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12l-10.5-6v12L23 12zM1 12l10.5-6v12L1 12z"/><path d="M10 8.64L15.27 12 10 15.36V8.64M8 5v14l11-7L8 5z" fill="currentColor"/></svg></a>`;
+      h+=`<div class="ex ${allDone?'done':''} ${sp&&isExp?'expanded':''}">
+        <div class="ex-top" onclick="${sp?`togExpand('${key}',event)`:`togEx('${key}')`}">
+          <div class="ex-ck"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="ex-info"><div class="ex-name">${e.n}</div><div class="ex-det">${e.d}</div>${e.note?`<div class="ex-note">${e.note}</div>`:''}${summary?`<div class="ex-sum">${summary}</div>`:''}</div>
+          ${yt}
+        </div>`;
+      if(sp){
+        const numSets=sp.sets;
+        h+=`<div class="set-log">`;
+        for(let si2=0;si2<Math.max(numSets,sets.length);si2++){
+          const sd=sets[si2]||{};
+          const prevKg=sd.kg||(lastData&&lastData[si2]?lastData[si2].kg:'')||'';
+          const prevReps=sd.reps||(lastData&&lastData[si2]?lastData[si2].reps:'')||'';
+          h+=`<div class="set-row">
+            <span class="set-num">${si2+1}</span>
+            <input class="set-input" type="number" inputmode="decimal" placeholder="kg" value="${prevKg}" onchange="logSet('${exKey}','${today}',${si2},'kg',this.value)" onclick="event.stopPropagation()">
+            <span class="set-x">&times;</span>
+            <input class="set-input" type="number" inputmode="numeric" placeholder="reps" value="${prevReps}" style="width:50px" onchange="logSet('${exKey}','${today}',${si2},'reps',this.value)" onclick="event.stopPropagation()">
+            <button class="set-done-btn ${sd.done?'checked':''}" onclick="event.stopPropagation();logSetDone('${exKey}','${today}',${si2},'${key}')">&#10003;</button>
+          </div>`;
+        }
+        const vol=sets.reduce((a,s)=>a+(s.done?((s.kg||0)*(s.reps||0)):0),0);
+        if(vol>0)h+=`<div class="set-vol">Volume: ${vol.toLocaleString()} kg</div>`;
+        h+=`<button class="set-add" onclick="event.stopPropagation();addSet('${exKey}','${today}','${key}')">+ Add Set</button>`;
+        h+=`</div>`;
+      }
+      h+=`</div>`;
+    });
+  });
+  if(d.type==='gym'||d.type==='cardio')h+=`<div style="text-align:center;margin:18px 0 6px"><button onclick="openTm()" style="background:var(--accent);color:#fff;border:none;border-radius:24px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">&#9201; Rest Timer</button></div>`;
+  c.innerHTML=h;
+}
+function toggleSkip(di){
+  if(!S.skipped)S.skipped={};
+  const key=dk()+'_'+di;
+  S.skipped[key]=!S.skipped[key];
+  if(!S.skipped[key])delete S.skipped[key];
+  saveS();renderDay();
+}
+
+function togEx(key){S.done[key]=!S.done[key];saveS();renderDay()}
+function togExpand(key,ev){S.expanded[key]=!S.expanded[key];saveS();renderDay()}
+
+function logSet(exName,date,setIdx,field,val){
+  const k=date+'_'+exName;
+  if(!S.log[k])S.log[k]=[];
+  while(S.log[k].length<=setIdx)S.log[k].push({kg:'',reps:'',done:false});
+  S.log[k][setIdx][field]=field==='kg'?parseFloat(val)||'':parseInt(val)||'';
+  saveS();
+}
+function logSetDone(exName,date,setIdx,exKey){
+  const k=date+'_'+exName;
+  if(!S.log[k])S.log[k]=[];
+  while(S.log[k].length<=setIdx)S.log[k].push({kg:'',reps:'',done:false});
+  S.log[k][setIdx].done=!S.log[k][setIdx].done;
+  saveS();renderDay();
+}
+function addSet(exName,date,exKey){
+  const k=date+'_'+exName;
+  if(!S.log[k])S.log[k]=[];
+  const last=S.log[k].length>0?S.log[k][S.log[k].length-1]:{};
+  S.log[k].push({kg:last.kg||'',reps:last.reps||'',done:false});
+  saveS();renderDay();
+}
+function getLastLog(exName,excludeDate){
+  const keys=Object.keys(S.log).filter(k=>k.endsWith('_'+exName)&&!k.startsWith(excludeDate)).sort().reverse();
+  return keys.length>0?S.log[keys[0]]:null;
+}
+
+// SETTINGS
+function renderSettings(){
+  const ed=document.getElementById('scheduleEditor');
+  const dn=['Ponedjeljak','Utorak','Srijeda','Cetvrtak','Petak','Subota','Nedjelja'];
+  ed.innerHTML=dn.map((name,i)=>{
+    const cur=S.schedule[i];
+    const pr=P[cur];
+    const dotCol=PCOLORS[pr.type]||'var(--text3)';
+    let opts='';
+    for(let pi=0;pi<7;pi++){opts+=`<option value="${pi}" ${pi===cur?'selected':''}>${PNAMES[pi]}</option>`}
+    return`<div class="sched-row"><div class="sched-dot" style="background:${dotCol}"></div><div class="sched-day">${name.substring(0,3)}</div><select class="sched-sel" onchange="setSched(${i},parseInt(this.value))">${opts}</select></div>`;
+  }).join('');
+}
+function setSched(dayIdx,progIdx){
+  S.schedule[dayIdx]=progIdx;saveS();renderWk();renderDay();renderSettings();
+}
+function resetSchedule(){
+  S.schedule=[...DEFAULT_SCHED];saveS();renderWk();renderDay();renderSettings();
+}
+
+// NUTRITION
+function setNut(m){S.nmode=m;saveS();document.getElementById('nt-t').className='tab-btn'+(m==='training'?' act':'');document.getElementById('nt-r').className='tab-btn'+(m==='rest'?' act':'');renderNut()}
+function renderNut(){
+  const n=NUT[S.nmode];
+  document.getElementById('macroSum').innerHTML=`<div class="mbr"><div class="mb mk"><div class="mb-v">${n.kcal}</div><div class="mb-u">kcal</div><div class="mb-l">Target</div></div><div class="mb mp"><div class="mb-v">${n.pro}g</div><div class="mb-u">protein</div><div class="mb-l">${Math.round(n.pro*4/n.kcal*100)}%</div></div><div class="mb mc"><div class="mb-v">${n.carb}g</div><div class="mb-u">carbs</div><div class="mb-l">${Math.round(n.carb*4/n.kcal*100)}%</div></div><div class="mb mf"><div class="mb-v">${n.fat}g</div><div class="mb-u">fat</div><div class="mb-l">${Math.round(n.fat*9/n.kcal*100)}%</div></div></div>`;
+  const dkey=dk();if(!S.water[dkey])S.water[dkey]=0;
+  const wt=document.getElementById('wTr');wt.innerHTML='';
+  for(let i=0;i<10;i++){const f=i<S.water[dkey];const g=document.createElement('div');g.className='wg'+(f?' fil':'');g.innerHTML=f?'&#128167;':'';g.onclick=()=>{S.water[dkey]=f?i:i+1;saveS();renderNut()};wt.appendChild(g)}
+  document.getElementById('wCnt').textContent=S.water[dkey]+' / 10';
+  const ml=document.getElementById('mealList');ml.innerHTML='';
+  n.meals.forEach((m,mi)=>{const mk=dkey+'_'+S.nmode+'_'+mi,exp=S.mexp[mk]||false;let fh=m.foods.map(f=>`<div class="fd"><span class="fd-n">${f.n}</span><span class="fd-a">${f.a}</span></div>`).join('');ml.innerHTML+=`<div class="ml ${exp?'exp':''}" onclick="togMl('${mk}')"><div class="ml-h"><div><div class="ml-t">${m.time}</div><div class="ml-n">${m.name}</div></div><div class="ml-k">${m.kcal} kcal</div></div><div class="ml-f">${fh}<div class="ml-m"><span style="color:var(--blue)">P:${m.pro}g</span><span style="color:var(--yellow)">C:${m.carb}g</span><span style="color:var(--purple)">F:${m.fat}g</span></div></div></div>`});
+  const sl=document.getElementById('supList');sl.innerHTML='';
+  SUPS.forEach(s=>{sl.innerHTML+=`<div class="sup-item"><div class="sup-dot" style="background:${s.cat==='must'?'var(--green)':'var(--yellow)'}"></div><div class="sup-info"><div class="sup-name">${s.name}</div><div class="sup-dose">${s.dose} — ${s.note}</div></div><div class="sup-when">${s.when}</div></div>`});
+}
+function togMl(k){S.mexp[k]=!S.mexp[k];saveS();renderNut()}
+
+// MOBILITY
+function renderMob(){rsl('mobDaily',MOB.daily,'daily');rsl('mobShoulder',MOB.shoulder,'shld');rsl('mobWarm',MOB.warm,'warm');rsl('mobCool',MOB.cool,'cool');rsl('mobEve',MOB.eve,'eve')}
+function rsl(cid,items,pfx){const c=document.getElementById(cid);const ic={h:'&#129461;',s:'&#128170;',f:'&#129496;',a:'&#129462;'};const icl={h:'si-h',s:'si-s',f:'si-f',a:'si-a'};c.innerHTML=items.map((x,i)=>{const k=dk()+'_m_'+pfx+'_'+i,done=S.done[k]||false;return`<div class="si ${done?'done':''}" onclick="togMb('${k}','${cid}','${pfx}')"><div class="si-i ${icl[x.i]}">${ic[x.i]}</div><div class="si-info"><div class="si-n">${x.n}</div><div class="si-d">${x.d}</div></div><div class="si-dur">${x.dur}</div></div>`}).join('')}
+function togMb(k,cid,pfx){S.done[k]=!S.done[k];saveS();const m={mobDaily:MOB.daily,mobShoulder:MOB.shoulder,mobWarm:MOB.warm,mobCool:MOB.cool,mobEve:MOB.eve};rsl(cid,m[cid],pfx)}
+
+// HISTORY
+function getAllExercises(){
+  const names=new Set();
+  Object.keys(S.log).forEach(k=>{const idx=k.indexOf('_');if(idx>0)names.add(k.substring(idx+1))});
+  return[...names].sort();
+}
+function openHist(){
+  document.getElementById('histModal').classList.add('vis');
+  const sel=document.getElementById('histExSel');
+  const exs=getAllExercises();
+  sel.innerHTML=exs.length===0?'<option>No data yet</option>':exs.map(e=>`<option value="${e}">${e}</option>`).join('');
+  renderHist();
+}
+function closeHist(){document.getElementById('histModal').classList.remove('vis')}
+function renderHist(){
+  const exName=document.getElementById('histExSel').value;
+  if(!exName){document.getElementById('histChart').innerHTML='<div class="chart-empty">Unesi kilaze na treningu pa ce se ovdje pojaviti history.</div>';document.getElementById('histLog').innerHTML='';return}
+  const entries=[];let globalMax=0;
+  Object.keys(S.log).sort().forEach(k=>{
+    if(k.endsWith('_'+exName)){
+      const date=k.substring(0,10);
+      const sets=S.log[k].filter(s=>s.done&&s.kg);
+      if(sets.length>0){
+        const maxKg=Math.max(...sets.map(s=>s.kg));
+        const vol=sets.reduce((a,s)=>a+s.kg*s.reps,0);
+        entries.push({date,sets,maxKg,vol});
+        if(maxKg>globalMax)globalMax=maxKg;
+      }
+    }
+  });
+  if(entries.length===0){document.getElementById('histChart').innerHTML='<div class="chart-empty">No completed sets for this exercise yet.</div>';document.getElementById('histLog').innerHTML='';return}
+  const prMax=Math.max(...entries.map(e=>e.maxKg));
+  // SVG Chart
+  const W=340,H=140,pad=30,padR=10,padB=20;
+  const cW=W-pad-padR,cH=H-padB-10;
+  const yMin=Math.floor(globalMax*0.7/5)*5,yMax=Math.ceil(globalMax*1.05/5)*5;
+  const yRange=yMax-yMin||1;
+  let svg=`<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+  // Grid lines
+  for(let i=0;i<=4;i++){const y=10+cH-cH*(i/4);const val=Math.round(yMin+yRange*(i/4));svg+=`<line x1="${pad}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#252535" stroke-width="0.5"/><text x="${pad-4}" y="${y+3}" fill="#5c5c72" font-size="8" text-anchor="end">${val}</text>`}
+  // Points & lines
+  const pts=entries.map((e,i)=>{const x=pad+(entries.length===1?cW/2:cW*i/(entries.length-1));const y=10+cH-cH*((e.maxKg-yMin)/yRange);return{x,y,e}});
+  if(pts.length>1){let path='M'+pts.map(p=>`${p.x},${p.y}`).join(' L');svg+=`<path d="${path}" fill="none" stroke="#ff6b35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`}
+  pts.forEach(p=>{svg+=`<circle cx="${p.x}" cy="${p.y}" r="4" fill="${p.e.maxKg===prMax?'#fbbf24':'#ff6b35'}" stroke="${p.e.maxKg===prMax?'#fbbf24':'#ff6b35'}" stroke-width="2"/>`;if(entries.length<=10){const dt=p.e.date.substring(5);svg+=`<text x="${p.x}" y="${H-2}" fill="#5c5c72" font-size="7" text-anchor="middle">${dt}</text>`}});
+  svg+=`</svg>`;
+  document.getElementById('histChart').innerHTML=`<div class="chart-wrap"><div class="chart-label">Max Weight (kg)</div>${svg}</div>`;
+  // Log
+  document.getElementById('histLog').innerHTML=entries.reverse().map(e=>{
+    const isPR=e.maxKg===prMax;
+    const setsStr=e.sets.map(s=>`${s.kg}kg×${s.reps}`).join(', ');
+    return`<div class="hist-entry"><div class="hist-date">${e.date}${isPR?'<span class="pr-badge">PR</span>':''}</div><div class="hist-sets">${setsStr}</div><div class="hist-vol">Volume: ${e.vol.toLocaleString()} kg</div></div>`;
+  }).join('');
+}
+
+// CALENDAR
+let calYear,calMon,calSelDate;
+function openCal(){
+  const t=new Date();calYear=t.getFullYear();calMon=t.getMonth();calSelDate=null;
+  document.getElementById('calModal').classList.add('vis');renderCal();
+}
+function closeCal(){document.getElementById('calModal').classList.remove('vis')}
+function calPrev(){calMon--;if(calMon<0){calMon=11;calYear--}renderCal()}
+function calNext(){calMon++;if(calMon>11){calMon=0;calYear++}renderCal()}
+function renderCal(){
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('calMonth').textContent=months[calMon]+' '+calYear;
+  const grid=document.getElementById('calGrid');
+  const first=new Date(calYear,calMon,1);
+  const lastDay=new Date(calYear,calMon+1,0).getDate();
+  let startDow=first.getDay();startDow=startDow===0?6:startDow-1;
+  const today=new Date();const todayStr=fmtDate(today);
+  const dh=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  let h=dh.map(d=>`<div class="cal-dh">${d}</div>`).join('');
+  for(let i=0;i<startDow;i++)h+=`<div class="cal-d empty"></div>`;
+  for(let d=1;d<=lastDay;d++){
+    const dt=new Date(calYear,calMon,d);
+    const dtStr=fmtDate(dt);
+    const dow=dt.getDay();const weekIdx=dow===0?6:dow-1;
+    const prog=getProgram(weekIdx);
+    const dotCol=PCOLORS[prog.type]||'var(--text3)';
+    const isToday=dtStr===todayStr;
+    const isSel=calSelDate===dtStr;
+    const hasLog=Object.keys(S.log).some(k=>k.startsWith(dtStr));
+    const cls=['cal-d',isToday?'today':'',isSel?'selected':'',hasLog?'has-log':''].filter(Boolean).join(' ');
+    h+=`<div class="${cls}" onclick="calSelect('${dtStr}',${weekIdx})"><span class="cd-num">${d}</span><div class="cd-dot" style="background:${dotCol}"></div></div>`;
+  }
+  grid.innerHTML=h;
+  if(calSelDate)renderCalDetail(calSelDate);else document.getElementById('calDetail').innerHTML='';
+}
+function calSelect(dtStr,weekIdx){calSelDate=calSelDate===dtStr?null:dtStr;renderCal()}
+function renderCalDetail(dtStr){
+  const dt=new Date(dtStr+'T12:00:00');
+  const dow=dt.getDay();const weekIdx=dow===0?6:dow-1;
+  const prog=getProgram(weekIdx);
+  const dayLogs=Object.keys(S.log).filter(k=>k.startsWith(dtStr));
+  let logHtml='';
+  if(dayLogs.length>0){
+    logHtml='<div style="margin-top:8px">';
+    dayLogs.forEach(k=>{
+      const exName=k.substring(11);
+      const sets=S.log[k].filter(s=>s.done&&s.kg);
+      if(sets.length>0){
+        const sStr=sets.map(s=>`${s.kg}kg×${s.reps}`).join(', ');
+        const vol=sets.reduce((a,s)=>a+s.kg*s.reps,0);
+        logHtml+=`<div style="margin-bottom:6px"><strong>${exName}</strong><br>${sStr}<br><span style="color:var(--text3);font-size:10px">Vol: ${vol.toLocaleString()} kg</span></div>`;
+      }
+    });
+    logHtml+='</div>';
+  }
+  const today=dk();
+  document.getElementById('calDetail').innerHTML=`<div class="cal-detail">
+    <div class="cal-detail-type" style="color:${prog.color}">${prog.label}</div>
+    <div class="cal-detail-name">${prog.name}</div>
+    <div class="cal-detail-log">${dayLogs.length>0?logHtml:'<span style="color:var(--text3)">Nema upisanih treninga za ovaj dan.</span>'}</div>
+    <button class="cal-btn-go" onclick="goToDay('${dtStr}',${weekIdx})">Otvori trening</button>
+  </div>`;
+}
+function goToDay(dtStr,weekIdx){
+  closeCal();
+  const target=new Date(dtStr+'T12:00:00');
+  const now=new Date();
+  const nowDow=now.getDay();const nowMo=nowDow===0?-6:1-nowDow;
+  const thisMon=new Date(now);thisMon.setDate(now.getDate()+nowMo);thisMon.setHours(0,0,0,0);
+  const diff=Math.round((target.getTime()-thisMon.getTime())/(7*86400000));
+  weekOff=diff;
+  S.sel=weekIdx;saveS();nav('schedule');renderWk();renderDay();
+}
+
+// TIMER
+let tInt=null,tSec=90,tRun=false,tInit=90;
+function openTm(){document.getElementById('timerModal').classList.add('vis');rstTm()}
+function closeTm(){document.getElementById('timerModal').classList.remove('vis');clearInterval(tInt);tRun=false}
+function setTm(s){tInit=s;tSec=s;tRun=false;clearInterval(tInt);updTm();document.getElementById('tmBtn').textContent='Start';document.getElementById('tmStat').textContent='Rest Timer';document.getElementById('tmDisp').style.color='var(--text)';document.querySelectorAll('.tp').forEach(p=>{const v=p.textContent.split(':');p.classList.toggle('act',parseInt(v[0])*60+parseInt(v[1])===s)})}
+function rstTm(){tSec=tInit;tRun=false;clearInterval(tInt);updTm();document.getElementById('tmBtn').textContent='Start';document.getElementById('tmStat').textContent='Rest Timer';document.getElementById('tmDisp').style.color='var(--text)'}
+function togTm(){if(tRun){clearInterval(tInt);tRun=false;document.getElementById('tmBtn').textContent='Resume'}else{tRun=true;document.getElementById('tmBtn').textContent='Pause';document.getElementById('tmStat').textContent='Resting...';tInt=setInterval(()=>{tSec--;updTm();if(tSec<=0){clearInterval(tInt);tRun=false;document.getElementById('tmStat').textContent='GO! Next set!';document.getElementById('tmBtn').textContent='Reset';document.getElementById('tmDisp').style.color='var(--green)';if(navigator.vibrate)navigator.vibrate([200,100,200,100,200]);document.getElementById('tmBtn').onclick=()=>{rstTm();document.getElementById('tmBtn').onclick=togTm}}},1000)}}
+function updTm(){const m=Math.floor(tSec/60),s=tSec%60;document.getElementById('tmDisp').textContent=m+':'+String(s).padStart(2,'0')}
+
+// INIT
+(function(){
+  const t=new Date(),dow=t.getDay();S.sel=dow===0?6:dow-1;
+  document.getElementById('hDate').textContent=t.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const dp=getProgram(S.sel);
+  S.nmode=(dp&&(dp.type==='gym'||dp.type==='tennis'||dp.type==='cardio'))?'training':'rest';
+  saveS();renderWk();renderDay();
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
