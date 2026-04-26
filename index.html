@@ -211,7 +211,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;ba
 <div class="app">
   <div class="hdr"><div class="hdr-top"><div><h1>Fit<span>Plan</span></h1><div class="hdr-date" id="hDate"></div></div><div style="display:flex;gap:8px;align-items:center"><button onclick="openCal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px">&#128197;</button><div class="wa-badge" onclick="nav('stats')">WA <b>32</b></div></div></div></div>
   <div class="cnt">
-    <div class="page active" id="p-schedule"><div class="wk" id="weekStrip"></div><div id="dayContent"></div></div>
+    <div class="page active" id="p-schedule"><div id="wkNav"></div><div style="display:flex;align-items:center;gap:4px"><button id="wkPrev" onclick="weekOff--;renderWk();renderDay()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);width:28px;height:56px;border-radius:8px;cursor:pointer;font-size:14px;font-family:inherit;flex-shrink:0">&lt;</button><div class="wk" id="weekStrip" style="flex:1"></div><button id="wkNext" onclick="weekOff++;renderWk();renderDay()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);width:28px;height:56px;border-radius:8px;cursor:pointer;font-size:14px;font-family:inherit;flex-shrink:0">&gt;</button></div><div id="dayContent"></div></div>
     <div class="page" id="p-nutrition">
       <div class="tab-row"><div class="tab-btn act" id="nt-t" onclick="setNut('training')">Training Day</div><div class="tab-btn" id="nt-r" onclick="setNut('rest')">Rest / Cardio Day</div></div>
       <div id="macroSum"></div>
@@ -428,10 +428,8 @@ function renderWk(){
   const dn=['MON','TUE','WED','THU','FRI','SAT','SUN'];
   const today=new Date();
   s.innerHTML='';
-  const navHtml=weekOff!==0?`<div style="display:flex;justify-content:center;gap:12px;margin-bottom:8px"><button onclick="weekOff=0;renderWk();renderDay()" style="background:var(--bg3);border:1px solid var(--border);color:var(--accent);border-radius:16px;padding:5px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">&#8592; Back to this week</button></div>`:'';
-  document.getElementById('weekStrip').insertAdjacentHTML('beforebegin','');
-  const prev=document.getElementById('wkNav');if(prev)prev.remove();
-  if(weekOff!==0){const nav=document.createElement('div');nav.id='wkNav';nav.innerHTML=`<div style="display:flex;justify-content:center;margin-bottom:8px"><button onclick="weekOff=0;S.sel=new Date().getDay()===0?6:new Date().getDay()-1;saveS();renderWk();renderDay()" style="background:var(--bg3);border:1px solid var(--border);color:var(--accent);border-radius:16px;padding:5px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">&#8592; This week</button></div>`;s.parentNode.insertBefore(nav,s)}
+  const nav=document.getElementById('wkNav');
+  if(weekOff!==0){nav.innerHTML=`<div style="text-align:center;margin-bottom:6px"><button onclick="weekOff=0;S.sel=new Date().getDay()===0?6:new Date().getDay()-1;saveS();renderWk();renderDay()" style="background:var(--bg3);border:1px solid var(--border);color:var(--accent);border-radius:16px;padding:5px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">&#8592; This week</button></div>`}else{nav.innerHTML=''}
   for(let i=0;i<7;i++){
     const d=new Date(t);d.setDate(t.getDate()+mo+i+weekOff*7);
     const pr=getProgram(i);
@@ -948,8 +946,21 @@ function rstTm(){tSec=tInit;tRun=false;clearInterval(tInt);updTm();document.getE
 function togTm(){if(tRun){clearInterval(tInt);tRun=false;document.getElementById('tmBtn').textContent='Resume'}else{tRun=true;document.getElementById('tmBtn').textContent='Pause';document.getElementById('tmStat').textContent='Resting...';tInt=setInterval(()=>{tSec--;updTm();if(tSec<=0){clearInterval(tInt);tRun=false;document.getElementById('tmStat').textContent='GO! Next set!';document.getElementById('tmBtn').textContent='Reset';document.getElementById('tmDisp').style.color='var(--green)';if(navigator.vibrate)navigator.vibrate([200,100,200,100,200]);document.getElementById('tmBtn').onclick=()=>{rstTm();document.getElementById('tmBtn').onclick=togTm}}},1000)}}
 function updTm(){const m=Math.floor(tSec/60),s=tSec%60;document.getElementById('tmDisp').textContent=m+':'+String(s).padStart(2,'0')}
 
+// CLEANUP pre-launch data
+function cleanupOldData(){
+  const cutoff='2026-04-26';
+  ['log','watch','done','skipped','sups'].forEach(key=>{
+    if(S[key]&&typeof S[key]==='object'){
+      Object.keys(S[key]).forEach(k=>{if(k<cutoff)delete S[key][k]});
+    }
+  });
+  if(S.water){Object.keys(S.water).forEach(k=>{if(k<cutoff)delete S.water[k]})}
+  saveS();
+}
+
 // INIT
 (function(){
+  cleanupOldData();
   const t=new Date(),dow=t.getDay();S.sel=dow===0?6:dow-1;
   document.getElementById('hDate').textContent=t.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
   const dp=getProgram(S.sel);
