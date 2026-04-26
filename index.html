@@ -617,17 +617,26 @@ function getAllExercises(){
   Object.keys(S.log).forEach(k=>{const idx=k.indexOf('_');if(idx>0)names.add(k.substring(idx+1))});
   return[...names].sort();
 }
+function getAllSessionDates(){
+  const dates=new Set();
+  Object.keys(S.log||{}).forEach(k=>dates.add(k.substring(0,10)));
+  Object.keys(S.watch||{}).forEach(k=>{const d=k.substring(0,10);if(d.match(/^\d{4}-/))dates.add(d)});
+  return[...dates].sort().reverse();
+}
 function openHist(){
   document.getElementById('histModal').classList.add('vis');
   const sel=document.getElementById('histExSel');
   const exs=getAllExercises();
-  sel.innerHTML=exs.length===0?'<option>No data yet</option>':exs.map(e=>`<option value="${e}">${e}</option>`).join('');
+  let opts='<option value="__all__">All Sessions (Strength + Cardio)</option>';
+  opts+=exs.map(e=>`<option value="${e}">${e}</option>`).join('');
+  sel.innerHTML=opts;
   renderHist();
 }
 function closeHist(){document.getElementById('histModal').classList.remove('vis')}
 function renderHist(){
   const exName=document.getElementById('histExSel').value;
-  if(!exName){document.getElementById('histChart').innerHTML='<div class="chart-empty">Unesi kilaze na treningu pa ce se ovdje pojaviti history.</div>';document.getElementById('histLog').innerHTML='';return}
+  if(exName==='__all__')return renderAllSessions();
+  if(!exName){document.getElementById('histChart').innerHTML='<div class="chart-empty">Unesi podatke na treningu.</div>';document.getElementById('histLog').innerHTML='';return}
   const entries=[];let globalMax=0;
   Object.keys(S.log).sort().forEach(k=>{
     if(k.endsWith('_'+exName)){
@@ -643,26 +652,85 @@ function renderHist(){
   });
   if(entries.length===0){document.getElementById('histChart').innerHTML='<div class="chart-empty">No completed sets for this exercise yet.</div>';document.getElementById('histLog').innerHTML='';return}
   const prMax=Math.max(...entries.map(e=>e.maxKg));
-  // SVG Chart
-  const W=340,H=140,pad=30,padR=10,padB=20;
-  const cW=W-pad-padR,cH=H-padB-10;
-  const yMin=Math.floor(globalMax*0.7/5)*5,yMax=Math.ceil(globalMax*1.05/5)*5;
-  const yRange=yMax-yMin||1;
+  const W=340,H=140,pad=30,padR=10,cW=W-pad-padR,cH=H-30;
+  const yMin=Math.floor(globalMax*0.7/5)*5,yMax=Math.ceil(globalMax*1.05/5)*5,yRange=yMax-yMin||1;
   let svg=`<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
-  // Grid lines
-  for(let i=0;i<=4;i++){const y=10+cH-cH*(i/4);const val=Math.round(yMin+yRange*(i/4));svg+=`<line x1="${pad}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#252535" stroke-width="0.5"/><text x="${pad-4}" y="${y+3}" fill="#5c5c72" font-size="8" text-anchor="end">${val}</text>`}
-  // Points & lines
+  for(let i=0;i<=4;i++){const y=10+cH-cH*(i/4);const val=Math.round(yMin+yRange*(i/4));svg+=`<line x1="${pad}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#252535" stroke-width=".5"/><text x="${pad-4}" y="${y+3}" fill="#5c5c72" font-size="8" text-anchor="end">${val}</text>`}
   const pts=entries.map((e,i)=>{const x=pad+(entries.length===1?cW/2:cW*i/(entries.length-1));const y=10+cH-cH*((e.maxKg-yMin)/yRange);return{x,y,e}});
-  if(pts.length>1){let path='M'+pts.map(p=>`${p.x},${p.y}`).join(' L');svg+=`<path d="${path}" fill="none" stroke="#ff6b35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`}
-  pts.forEach(p=>{svg+=`<circle cx="${p.x}" cy="${p.y}" r="4" fill="${p.e.maxKg===prMax?'#fbbf24':'#ff6b35'}" stroke="${p.e.maxKg===prMax?'#fbbf24':'#ff6b35'}" stroke-width="2"/>`;if(entries.length<=10){const dt=p.e.date.substring(5);svg+=`<text x="${p.x}" y="${H-2}" fill="#5c5c72" font-size="7" text-anchor="middle">${dt}</text>`}});
+  if(pts.length>1)svg+=`<path d="M${pts.map(p=>p.x+','+p.y).join(' L')}" fill="none" stroke="#ff6b35" stroke-width="2" stroke-linecap="round"/>`;
+  pts.forEach(p=>{svg+=`<circle cx="${p.x}" cy="${p.y}" r="4" fill="${p.e.maxKg===prMax?'#fbbf24':'#ff6b35'}"/>`;if(entries.length<=10)svg+=`<text x="${p.x}" y="${H-2}" fill="#5c5c72" font-size="7" text-anchor="middle">${p.e.date.substring(5)}</text>`});
   svg+=`</svg>`;
   document.getElementById('histChart').innerHTML=`<div class="chart-wrap"><div class="chart-label">Max Weight (kg)</div>${svg}</div>`;
-  // Log
   document.getElementById('histLog').innerHTML=entries.reverse().map(e=>{
     const isPR=e.maxKg===prMax;
-    const setsStr=e.sets.map(s=>`${s.kg}kg×${s.reps}`).join(', ');
-    return`<div class="hist-entry"><div class="hist-date">${e.date}${isPR?'<span class="pr-badge">PR</span>':''}</div><div class="hist-sets">${setsStr}</div><div class="hist-vol">Volume: ${e.vol.toLocaleString()} kg</div></div>`;
+    return`<div class="hist-entry"><div class="hist-date">${e.date}${isPR?'<span class="pr-badge">PR</span>':''}</div><div class="hist-sets">${e.sets.map(s=>s.kg+'kg×'+s.reps).join(', ')}</div><div class="hist-vol">Volume: ${e.vol.toLocaleString()} kg</div></div>`;
   }).join('');
+}
+function renderAllSessions(){
+  const dates=getAllSessionDates();
+  if(dates.length===0){
+    document.getElementById('histChart').innerHTML='<div class="chart-empty">Nema upisanih sesija. Unesi kilaze ili Watch podatke na treningu.</div>';
+    document.getElementById('histLog').innerHTML='';return;
+  }
+  // Calorie chart from watch data
+  const watchDates=Object.keys(S.watch||{}).filter(k=>k.includes('_watch')).sort();
+  const calData=watchDates.map(k=>({date:k.substring(0,10),cals:S.watch[k].cals||0,hr:S.watch[k].hrAvg||0,dur:S.watch[k].dur||0})).filter(d=>d.cals||d.hr);
+  if(calData.length>0){
+    const W=340,H=120,pad=35,padR=10,cW=W-pad-padR,cH=H-30;
+    const vals=calData.map(d=>d.cals).filter(Boolean);
+    if(vals.length>0){
+      const mn=Math.floor(Math.min(...vals)*0.8/50)*50,mx=Math.ceil(Math.max(...vals)*1.1/50)*50,rng=mx-mn||1;
+      let svg=`<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+      for(let i=0;i<=3;i++){const y=10+cH-cH*(i/3);const v=Math.round(mn+rng*i/3);svg+=`<line x1="${pad}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#252535" stroke-width=".5"/><text x="${pad-4}" y="${y+3}" fill="#5c5c72" font-size="8" text-anchor="end">${v}</text>`}
+      const pts=calData.filter(d=>d.cals).map((d,i,arr)=>{const x=pad+(arr.length===1?cW/2:cW*i/(arr.length-1));const y=10+cH-cH*((d.cals-mn)/rng);return{x,y,d}});
+      if(pts.length>1)svg+=`<path d="M${pts.map(p=>p.x+','+p.y).join(' L')}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
+      pts.forEach(p=>{svg+=`<circle cx="${p.x}" cy="${p.y}" r="3" fill="var(--accent)"/>`;if(pts.length<=10)svg+=`<text x="${p.x}" y="${H-2}" fill="#5c5c72" font-size="7" text-anchor="middle">${p.d.date.substring(5)}</text>`});
+      svg+=`</svg>`;
+      document.getElementById('histChart').innerHTML=`<div class="chart-wrap"><div class="chart-label">Calories Burned per Session</div>${svg}</div>`;
+    } else {
+      document.getElementById('histChart').innerHTML='';
+    }
+  } else {
+    document.getElementById('histChart').innerHTML='';
+  }
+  // All sessions list
+  let h='';
+  dates.forEach(date=>{
+    const dow=new Date(date+'T12:00:00');
+    const weekIdx=dow.getDay()===0?6:dow.getDay()-1;
+    const prog=getProgram(weekIdx);
+    const isSkipped=S.skipped&&S.skipped[date+'_'+weekIdx];
+    const dayName=dow.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    // Watch data
+    const wk=date+'_watch';
+    const wd=(S.watch&&S.watch[wk])||{};
+    const hasWatch=wd.hrAvg||wd.cals||wd.dur;
+    // Strength data
+    const exLogs=Object.keys(S.log||{}).filter(k=>k.startsWith(date+'_'));
+    const exCount=exLogs.length;
+    const totalVol=exLogs.reduce((a,k)=>{return a+(S.log[k]||[]).filter(s=>s.done).reduce((b,s)=>b+((s.kg||0)*(s.reps||0)),0)},0);
+    h+=`<div class="hist-entry">
+      <div class="hist-date" style="display:flex;justify-content:space-between;align-items:center">
+        <span>${dayName}${isSkipped?' <span style="color:var(--red)">(Skipped)</span>':''}</span>
+        <span style="font-size:10px;color:${prog.color};font-weight:700">${prog.label}</span>
+      </div>`;
+    if(hasWatch){
+      h+=`<div style="display:flex;gap:12px;margin-top:6px;font-size:12px">`;
+      if(wd.hrAvg)h+=`<span style="color:var(--red)">&#9829; ${wd.hrAvg} avg${wd.hrMax?' / '+wd.hrMax+' max':''} bpm</span>`;
+      h+=`</div><div style="display:flex;gap:12px;margin-top:3px;font-size:12px">`;
+      if(wd.cals)h+=`<span style="color:var(--accent)">${wd.cals} kcal</span>`;
+      if(wd.dur)h+=`<span style="color:var(--blue)">${wd.dur} min</span>`;
+      h+=`</div>`;
+    }
+    if(exCount>0&&totalVol>0){
+      h+=`<div class="hist-vol" style="margin-top:4px">${exCount} exercises &middot; Volume: ${totalVol.toLocaleString()} kg</div>`;
+    }
+    if(!hasWatch&&exCount===0&&!isSkipped){
+      h+=`<div style="font-size:11px;color:var(--text3);margin-top:4px">No data recorded</div>`;
+    }
+    h+=`</div>`;
+  });
+  document.getElementById('histLog').innerHTML=h;
 }
 
 // CALENDAR
