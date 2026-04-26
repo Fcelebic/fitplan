@@ -223,9 +223,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;ba
       <div class="tb" style="border-left-color:var(--blue)"><strong>Prioritet #2:</strong> AC zglob desnog ramena — shoulder prehab 3x sedmicno. Cilj: smanjiti upalu, stabilizovati lopaticu.</div>
       <div class="sl">Hip Mobility — Svaki dan (10 min)</div><div id="mobDaily"></div>
       <div class="sl">Shoulder Prehab — AC Zglob (5 min, 3x/sed)</div><div id="mobShoulder"></div>
-      <div class="sl">Pre-workout Warm-up</div><div id="mobWarm"></div>
-      <div class="sl">Post-workout Cool-down</div><div id="mobCool"></div>
-      <div class="sl">Vecernji stretch (optional)</div><div id="mobEve"></div>
+      <div class="sl">Pre-workout Warm-up (Gym + Tenis)</div><div id="mobWarm"></div>
+      <div class="sl">Post-workout Stretching (Gym + Tenis)</div><div id="mobCool"></div>
     </div>
     <div class="page" id="p-stats">
       <div style="text-align:center;margin-bottom:14px"><button onclick="openHist()" style="background:var(--accent);color:#fff;border:none;border-radius:24px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">Training History &amp; Progress</button></div>
@@ -454,7 +453,15 @@ function renderDay(){
   // Skip button
   let h=`<div class="skip-bar"><button class="skip-btn ${isSkipped?'skipped':''}" onclick="toggleSkip(${di})">${isSkipped?'&#10005; Day Skipped — tap to undo':'Skip This Day'}</button></div>`;
   if(isSkipped){h+=`<div class="skipped-banner">&#128564; Skipped</div>`;c.innerHTML=h;return}
-  h+=`<div class="wh"><div class="wh-type" style="color:${d.color}">${d.label}</div><div class="wh-name">${d.name}</div><div class="wh-meta"><span>${d.dur}</span><span style="color:var(--text3)">${d.focus}</span></div></div>`;
+  let schedOpts='';for(let pi=0;pi<7;pi++){schedOpts+=`<option value="${pi}" ${S.schedule[di]===pi?'selected':''}>${PNAMES[pi]}</option>`}
+  h+=`<div class="wh" style="cursor:pointer">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="wh-type" style="color:${d.color}">${d.label}</div>
+      <select style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:4px 8px;font-size:11px;font-weight:600;font-family:inherit;-webkit-appearance:none" onchange="quickSched(${di},parseInt(this.value))">${schedOpts}</select>
+    </div>
+    <div class="wh-name">${d.name}</div>
+    <div class="wh-meta"><span>${d.dur}</span><span style="color:var(--text3)">${d.focus}</span></div>
+  </div>`;
   d.sections.forEach((sec,si)=>{
     h+=`<div class="sl">${sec.name}</div>`;
     sec.ex.forEach((e,ei)=>{
@@ -526,6 +533,9 @@ function saveWatch(key,field,val){
   const el=document.getElementById('pwSaved');if(el){el.classList.add('vis');setTimeout(()=>el.classList.remove('vis'),2000)}
 }
 
+function quickSched(dayIdx,progIdx){
+  S.schedule[dayIdx]=progIdx;saveS();renderWk();renderDay();
+}
 function toggleSkip(di){
   if(!S.skipped)S.skipped={};
   const key=dk()+'_'+di;
@@ -629,9 +639,9 @@ function renderNut(){
 function togMl(k){S.mexp[k]=!S.mexp[k];saveS();renderNut()}
 
 // MOBILITY
-function renderMob(){rsl('mobDaily',MOB.daily,'daily');rsl('mobShoulder',MOB.shoulder,'shld');rsl('mobWarm',MOB.warm,'warm');rsl('mobCool',MOB.cool,'cool');rsl('mobEve',MOB.eve,'eve')}
+function renderMob(){rsl('mobDaily',MOB.daily,'daily');rsl('mobShoulder',MOB.shoulder,'shld');rsl('mobWarm',MOB.warm,'warm');rsl('mobCool',MOB.cool,'cool')}
 function rsl(cid,items,pfx){const c=document.getElementById(cid);const ic={h:'&#129461;',s:'&#128170;',f:'&#129496;',a:'&#129462;'};const icl={h:'si-h',s:'si-s',f:'si-f',a:'si-a'};c.innerHTML=items.map((x,i)=>{const k=dk()+'_m_'+pfx+'_'+i,done=S.done[k]||false;return`<div class="si ${done?'done':''}" onclick="togMb('${k}','${cid}','${pfx}')"><div class="si-i ${icl[x.i]}">${ic[x.i]}</div><div class="si-info"><div class="si-n">${x.n}</div><div class="si-d">${x.d}</div></div><div class="si-dur">${x.dur}</div></div>`}).join('')}
-function togMb(k,cid,pfx){S.done[k]=!S.done[k];saveS();const m={mobDaily:MOB.daily,mobShoulder:MOB.shoulder,mobWarm:MOB.warm,mobCool:MOB.cool,mobEve:MOB.eve};rsl(cid,m[cid],pfx)}
+function togMb(k,cid,pfx){S.done[k]=!S.done[k];saveS();const m={mobDaily:MOB.daily,mobShoulder:MOB.shoulder,mobWarm:MOB.warm,mobCool:MOB.cool};rsl(cid,m[cid],pfx)}
 
 // HISTORY
 function getAllExercises(){
