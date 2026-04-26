@@ -111,7 +111,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;ba
 .tm-bs{display:flex;gap:10px;margin-top:24px;justify-content:center}
 .tmb{padding:10px 24px;border-radius:24px;border:none;font-size:14px;font-weight:700;cursor:pointer}
 .tmb-p{background:var(--accent);color:#fff}.tmb-s{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
-.sup-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border-radius:var(--rs);margin-bottom:5px;border:1px solid var(--border)}
+.sup-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border-radius:var(--rs);margin-bottom:5px;border:1px solid var(--border);cursor:pointer;transition:.2s}
+.sup-item.taken{opacity:.45;background:var(--bg3)}
+.sup-item.taken .sup-name{text-decoration:line-through}
 .sup-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}.sup-info{flex:1}
 .sup-name{font-size:13px;font-weight:600}.sup-dose{font-size:11px;color:var(--text2)}
 .sup-when{font-size:10px;color:var(--accent);font-weight:600}
@@ -634,9 +636,13 @@ function renderNut(){
   const ml=document.getElementById('mealList');ml.innerHTML='';
   n.meals.forEach((m,mi)=>{const mk=dkey+'_'+S.nmode+'_'+mi,exp=S.mexp[mk]||false;let fh=m.foods.map(f=>`<div class="fd"><span class="fd-n">${f.n}</span><span class="fd-a">${f.a}</span></div>`).join('');ml.innerHTML+=`<div class="ml ${exp?'exp':''}" onclick="togMl('${mk}')"><div class="ml-h"><div><div class="ml-t">${m.time}</div><div class="ml-n">${m.name}</div></div><div class="ml-k">${m.kcal} kcal</div></div><div class="ml-f">${fh}<div class="ml-m"><span style="color:var(--blue)">P:${m.pro}g</span><span style="color:var(--yellow)">C:${m.carb}g</span><span style="color:var(--purple)">F:${m.fat}g</span></div></div></div>`});
   const sl=document.getElementById('supList');sl.innerHTML='';
-  SUPS.forEach(s=>{sl.innerHTML+=`<div class="sup-item"><div class="sup-dot" style="background:${s.cat==='must'?'var(--green)':'var(--yellow)'}"></div><div class="sup-info"><div class="sup-name">${s.name}</div><div class="sup-dose">${s.dose} — ${s.note}</div></div><div class="sup-when">${s.when}</div></div>`});
+  if(!S.sups)S.sups={};const supDay=dk();
+  SUPS.forEach((s,i)=>{const sk=supDay+'_sup_'+i;const taken=S.sups[sk]||false;sl.innerHTML+=`<div class="sup-item ${taken?'taken':''}" onclick="togSup('${sk}')"><div class="sup-dot" style="background:${taken?'var(--green)':s.cat==='must'?'var(--green)':'var(--yellow)'}"></div><div class="sup-info"><div class="sup-name">${taken?'&#10003; ':''} ${s.name}</div><div class="sup-dose">${s.dose} — ${s.note}</div></div><div class="sup-when">${s.when}</div></div>`});
+  const takenCount=SUPS.reduce((a,s,i)=>a+(S.sups[supDay+'_sup_'+i]?1:0),0);
+  document.getElementById('supList').insertAdjacentHTML('beforeend',`<div style="text-align:center;font-size:11px;color:var(--text3);margin-top:6px">${takenCount}/${SUPS.length} taken today</div>`);
 }
 function togMl(k){S.mexp[k]=!S.mexp[k];saveS();renderNut()}
+function togSup(k){if(!S.sups)S.sups={};S.sups[k]=!S.sups[k];if(!S.sups[k])delete S.sups[k];saveS();renderNut()}
 
 // MOBILITY
 function renderMob(){rsl('mobDaily',MOB.daily,'daily');rsl('mobShoulder',MOB.shoulder,'shld');rsl('mobWarm',MOB.warm,'warm');rsl('mobCool',MOB.cool,'cool')}
