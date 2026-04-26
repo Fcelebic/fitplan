@@ -248,14 +248,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;ba
       <div id="analyticsSection"></div>
       <div class="card" style="text-align:center;padding:18px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:700">Wellness Age</div><div style="font-size:52px;font-weight:800;color:var(--green);line-height:1">32</div><div style="font-size:12px;color:var(--text2);margin-top:3px">Chronological: 34 &middot; 2 god mladji</div></div>
       <div class="sg"><div class="sc"><div class="sc-v" style="color:var(--purple)">97</div><div class="sc-m">/100</div><div class="sc-l">Mind</div></div><div class="sc"><div class="sc-v" style="color:var(--green)">90</div><div class="sc-m">/100</div><div class="sc-l">Balance</div></div><div class="sc"><div class="sc-v" style="color:var(--blue)">73</div><div class="sc-m">/100</div><div class="sc-l">Mobility</div></div><div class="sc"><div class="sc-v" style="color:var(--blue)">71</div><div class="sc-m">/100</div><div class="sc-l">Strength</div></div><div class="sc"><div class="sc-v" style="color:var(--yellow)">63</div><div class="sc-m">/100</div><div class="sc-l">Body</div></div><div class="sc"><div class="sc-v" style="color:var(--red)">27</div><div class="sc-m">/100</div><div class="sc-l">Cardio</div></div></div>
-      <div class="sl">Body Composition</div>
+      <div class="sl">Current</div>
       <div id="dynBodyComp"></div>
-      <div class="sl">MRI — Desno Rame (Apr 2026)</div>
-      <div class="tb"><strong>AC zglob:</strong> Posttraumatska degeneracija — neravne zglobne plohe, hipertrofija sinovije, edematozni CC ligamenti. Buford kompleks (anatomska varijacija, ne povreda). Rotatorna manzeta i biceps OK. Push vjezbe prilagodene — izbjegavaj barbell OHP i dips.</div>
-      <div class="sl">Strength Tests</div>
-      <div class="card" style="padding:10px 14px"><div class="sr"><span class="sr-l">Chest Press</span><div><span class="sr-v">144.8 kg</span><div class="sr-r exc">EXCELLENT</div></div></div><div class="sr"><span class="sr-l">Lat Pulldown</span><div><span class="sr-v">127.5 kg</span><div class="sr-r exc">EXCELLENT</div></div></div><div class="sr"><span class="sr-l">Leg Press</span><div><span class="sr-v">284.6 kg</span><div class="sr-r gd">GOOD</div></div></div></div>
+      <div class="sl">Strength PRs (from training log)</div>
+      <div id="dynStrength"></div>
       <div class="sl">12-Week Goals</div>
       <div id="dynGoals"></div>
+      <div class="sl">MRI — Desno Rame (Apr 2026)</div>
+      <div class="tb"><strong>AC zglob:</strong> Posttraumatska degeneracija — neravne zglobne plohe, hipertrofija sinovije, edematozni CC ligamenti. Buford kompleks (anatomska varijacija, ne povreda). Rotatorna manzeta i biceps OK. Push vjezbe prilagodene — izbjegavaj barbell OHP i dips.</div>
+      <div class="sl">Fitpass Baseline (Apr 17, 2026)</div>
+      <div class="card" style="padding:10px 14px"><div class="sr"><span class="sr-l">Weight</span><div><span class="sr-v">102.9 kg</span></div></div><div class="sr"><span class="sr-l">Body Fat</span><div><span class="sr-v">19.4%</span><span style="font-size:11px;color:var(--text3)"> (19.9 kg)</span></div></div><div class="sr"><span class="sr-l">Muscle Mass</span><div><span class="sr-v">48.2 kg</span><span style="font-size:11px;color:var(--text3)"> (46.9%)</span></div></div><div class="sr"><span class="sr-l">BMR</span><div><span class="sr-v">2143 kcal</span></div></div><div class="sr"><span class="sr-l">Phase Angle</span><div><span class="sr-v">7.1°</span></div></div><div class="sr"><span class="sr-l">VO2 Max</span><div><span class="sr-v">29.2</span></div></div></div>
       <div style="margin-top:14px;text-align:center;font-size:10px;color:var(--text3);padding:8px">Fitpass / Technogym &middot; Apr 17, 2026<br>Fitpass Centar Sarajevo &middot; Trainer: Adna Ljustak</div>
     </div>
     <!-- SETTINGS -->
@@ -870,36 +872,54 @@ function getLatestCheckin(field){
   for(const k of keys){if(S.checkins[k][field])return S.checkins[k][field]}
   return null;
 }
+function getExercisePR(exName){
+  let max=0;
+  Object.keys(S.log||{}).forEach(k=>{
+    if(k.endsWith('_'+exName)){
+      (S.log[k]||[]).forEach(s=>{if(s.done&&s.kg>max)max=s.kg});
+    }
+  });
+  return max;
+}
 function renderDynStats(){
-  const BASE={weight:102.9,bf:19.4,bfkg:19.9,smm:48.2,bmi:28.8,bmr:2143,phase:7.1,vo2:29.2};
-  const GOAL={weight:94,vo2:38,bf:14};
+  const BASE={weight:102.9,vo2:29.2};
+  const GOAL={weight:94,vo2:38};
   const curW=getLatestCheckin('weight')||BASE.weight;
   const curVo2=getLatestCheckin('vo2')||BASE.vo2;
   const curWaist=getLatestCheckin('waist');
   const wDiff=curW-BASE.weight;
-  const curBmi=curW/(1.89*1.89);
-  // Body comp
+  // Current stats - only trackable metrics
   const bc=document.getElementById('dynBodyComp');
   bc.innerHTML=`<div class="card" style="padding:10px 14px">
-    <div class="sr"><span class="sr-l">Weight</span><div><span class="sr-v">${curW} kg</span><div class="sr-r ${curW<BASE.weight?'gd':'hi'}">${wDiff>0?'+':''}${wDiff.toFixed(1)} kg from baseline</div></div></div>
-    <div class="sr"><span class="sr-l">Body Fat</span><div><span class="sr-v">${BASE.bf}%</span><div class="sr-r avg">${BASE.bfkg} kg (baseline)</div></div></div>
-    <div class="sr"><span class="sr-l">Muscle Mass</span><div><span class="sr-v">${BASE.smm} kg</span><div class="sr-r exc">EXCELLENT</div></div></div>
-    <div class="sr"><span class="sr-l">BMI</span><div><span class="sr-v">${curBmi.toFixed(1)}</span><div class="sr-r ${curBmi<25?'gd':'hi'}">${curBmi<25?'NORMAL':'HIGH'}</div></div></div>
-    <div class="sr"><span class="sr-l">BMR</span><div><span class="sr-v">${BASE.bmr} kcal</span><div class="sr-r exc">EXCELLENT</div></div></div>
-    <div class="sr"><span class="sr-l">Phase Angle</span><div><span class="sr-v">${BASE.phase}°</span><div class="sr-r gd">GOOD</div></div></div>
-    <div class="sr"><span class="sr-l">VO2 Max</span><div><span class="sr-v">${curVo2}</span><div class="sr-r ${curVo2>=38?'gd':curVo2>=33?'avg':'fr'}">${curVo2>=38?'GOOD':curVo2>=33?'IMPROVING':'FAIR'}</div></div></div>
-    ${curWaist?`<div class="sr"><span class="sr-l">Waist</span><div><span class="sr-v">${curWaist} cm</span><div class="sr-r avg">Latest</div></div></div>`:''}
+    <div class="sr"><span class="sr-l">Weight</span><div><span class="sr-v">${curW} kg</span><div class="sr-r ${curW<BASE.weight?'gd':'hi'}">${wDiff>0?'+':''}${wDiff.toFixed(1)} kg</div></div></div>
+    <div class="sr"><span class="sr-l">VO2 Max</span><div><span class="sr-v">${curVo2}</span><div class="sr-r ${curVo2>=38?'gd':curVo2>=33?'avg':'fr'}">${curVo2>BASE.vo2?'+':''+(curVo2-BASE.vo2).toFixed(1)} from baseline</div></div></div>
+    ${curWaist?`<div class="sr"><span class="sr-l">Waist</span><div><span class="sr-v">${curWaist} cm</span></div></div>`:''}
   </div>`;
+  // Strength PRs from log
+  const tracked=[
+    {name:'DB Bench Press (neutralni grip)',label:'DB Bench Press',base:0},
+    {name:'Incline DB Press (30°)',label:'Incline DB',base:0},
+    {name:'Landmine Press',label:'Landmine Press',base:0},
+    {name:'Lat Pulldown / Zgibovi',label:'Lat Pulldown',base:0},
+    {name:'Barbell Row',label:'Barbell Row',base:0},
+    {name:'Squat (ili Leg Press)',label:'Squat / Leg Press',base:0},
+    {name:'Romanian Deadlift',label:'Romanian Deadlift',base:0},
+  ];
+  const st=document.getElementById('dynStrength');
+  const prs=tracked.map(t=>({...t,pr:getExercisePR(t.name)})).filter(t=>t.pr>0);
+  if(prs.length===0){
+    st.innerHTML=`<div class="tb">Kilaze se automatski pojavljuju ovdje kad ih uneses na treningu.</div>`;
+  } else {
+    st.innerHTML=`<div class="card" style="padding:10px 14px">${prs.map(p=>`<div class="sr"><span class="sr-l">${p.label}</span><div><span class="sr-v">${p.pr} kg</span><span class="pr-badge" style="margin-left:6px">PR</span></div></div>`).join('')}</div>`;
+  }
   // Goals
   const wProg=Math.min(100,Math.max(0,Math.round((BASE.weight-curW)/(BASE.weight-GOAL.weight)*100)));
   const vProg=Math.min(100,Math.max(0,Math.round((curVo2-BASE.vo2)/(GOAL.vo2-BASE.vo2)*100)));
   const gl=document.getElementById('dynGoals');
   gl.innerHTML=`
-    <div class="gi"><div class="gi-i">&#9878;</div><div class="gi-info"><div class="gi-t">Tezina: ${curW} &rarr; ${GOAL.weight} kg</div><div class="gi-bar"><div class="gi-fill" style="width:${wProg}%;background:${wProg>50?'var(--green)':'var(--accent)'}"></div></div><div class="gi-tgt">${wProg}% done &middot; ${(curW-GOAL.weight).toFixed(1)} kg remaining</div></div></div>
-    <div class="gi"><div class="gi-i">&#127939;</div><div class="gi-info"><div class="gi-t">VO2 Max: ${curVo2} &rarr; ${GOAL.vo2}+</div><div class="gi-bar"><div class="gi-fill" style="width:${vProg}%;background:${vProg>50?'var(--green)':'var(--red)'}"></div></div><div class="gi-tgt">${vProg}% done &middot; Zone 2 + HIIT</div></div></div>
-    <div class="gi"><div class="gi-i">&#129496;</div><div class="gi-info"><div class="gi-t">Hip fleksija: 106° &rarr; 120°+</div><div class="gi-bar"><div class="gi-fill" style="width:30%;background:var(--yellow)"></div></div><div class="gi-tgt">Daily hip mobility 10 min</div></div></div>
-    <div class="gi"><div class="gi-i">&#128170;</div><div class="gi-info"><div class="gi-t">BF: ${BASE.bf}% &rarr; 13-15%</div><div class="gi-bar"><div class="gi-fill" style="width:15%;background:var(--blue)"></div></div><div class="gi-tgt">Ravan stomak, trunk fat redukcija</div></div></div>
-    <div class="gi"><div class="gi-i">&#128175;</div><div class="gi-info"><div class="gi-t">Strength: Maintain / Grow</div><div class="gi-bar"><div class="gi-fill" style="width:90%;background:var(--green)"></div></div><div class="gi-tgt">Chest 144kg, Pull 127kg, Legs 284kg</div></div></div>`;
+    <div class="gi"><div class="gi-i">&#9878;</div><div class="gi-info"><div class="gi-t">Tezina: ${curW} &rarr; ${GOAL.weight} kg</div><div class="gi-bar"><div class="gi-fill" style="width:${wProg}%;background:${wProg>50?'var(--green)':'var(--accent)'}"></div></div><div class="gi-tgt">${wProg}% &middot; ${(curW-GOAL.weight).toFixed(1)} kg remaining</div></div></div>
+    <div class="gi"><div class="gi-i">&#127939;</div><div class="gi-info"><div class="gi-t">VO2 Max: ${curVo2} &rarr; ${GOAL.vo2}+</div><div class="gi-bar"><div class="gi-fill" style="width:${vProg}%;background:${vProg>50?'var(--green)':'var(--red)'}"></div></div><div class="gi-tgt">${vProg}% &middot; Zone 2 + HIIT</div></div></div>
+    <div class="gi"><div class="gi-i">&#129496;</div><div class="gi-info"><div class="gi-t">Hip fleksija: 106° &rarr; 120°+</div><div class="gi-bar"><div class="gi-fill" style="width:30%;background:var(--yellow)"></div></div><div class="gi-tgt">Daily hip mobility 10 min</div></div></div>`;
 }
 
 // ANALYTICS
